@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Time Record</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 5px;
+            background-color: #f5f5f5;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 18px;
+            margin: 5px 0 10px;
+        }
+        .employee-info {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #f9f9f9;
+            border-radius: 3px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 12px;
+            padding: 5px;
+        }
+        .summary {
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #e9f7ef;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .employee-name-display {
+            font-weight: bold;
+            margin: 0 0 5px;
+            display: none;
+            font-size: 14px;
+        }
+        .time-input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .time-card {
+            padding: 5px;
+            border-radius: 3px;
+            background-color: #f0f8ff;
+            flex: 1;
+        }
+        .time-card h4 {
+            margin: 2px 0 5px;
+            font-size: 13px;
+        }
+        .time-input-group {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        .time-btn {
+            padding: 5px 8px;
+            font-size: 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-time-in {
+            background-color: #4CAF50; /* Green */
+        }
+        .btn-time-out {
+            background-color: #f44336; /* Red */
+        }
+        .btn-primary {
+            background-color: #2196F3;
+        }
+        .btn-success {
+            background-color: #4CAF50;
+        }
+        .btn-danger {
+            background-color: #f44336;
+        }
+        .btn-holiday {
+            background-color: #9c27b0; /* Purple */
+        }
+        .btn-absent {
+            background-color: #607d8b; /* Blue Gray */
+        }
+        .btn-leave {
+            background-color: #ff9800; /* Orange */
+        }
+        .btn-dayoff {
+            background-color: #795548; /* Brown */
+        }
+        .input-group {
+            margin-bottom: 8px;
+        }
+        .name-input, .date-input {
+            padding: 5px;
+            width: 150px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .save-btn {
+            padding: 5px 8px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        .action-buttons {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .time-input-container {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .time-number {
+            width: 40px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            text-align: center;
+        }
+        .time-separator {
+            font-weight: bold;
+        }
+        .ampm-select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        .holiday-row {
+            background-color: #f3e5f5 !important; /* Light purple for holiday rows */
+        }
+        .absent-row {
+            background-color: #eceff1 !important; /* Light blue gray for absent rows */
+        }
+        .leave-row {
+            background-color: #fff3e0 !important; /* Light orange for leave rows */
+        }
+        .dayoff-row {
+            background-color: #efebe9 !important; /* Light brown for day off rows */
+        }
+        .date-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .status-buttons button {
+            flex: 1;
+        }
+        .remarks-input {
+            width: 100%;
+            padding: 3px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .print-only {
+            display: none;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+                font-size: 12px;
+            }
+            .container {
+                padding: 5px;
+                box-shadow: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .employee-name-display {
+                display: block !important;
+                margin: 0 0 3px;
+            }
+            h1 {
+                margin: 2px 0 5px;
+                font-size: 16px;
+            }
+            table {
+                font-size: 11px;
+            }
+            th, td {
+                padding: 3px;
+            }
+            .holiday-row {
+                background-color: #f3e5f5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .absent-row {
+                background-color: #eceff1 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .leave-row {
+                background-color: #fff3e0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .dayoff-row {
+                background-color: #efebe9 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .remarks-input {
+                display: none;
+            }
+            .print-only {
+                display: table-cell;
+            }
+        }
+    </style>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>DAILY TIME RECORD (1-hour break automatically deducted)</h1>
+        
+        <div class="employee-info">
+            <div class="employee-name-display" id="printed-employee-name"></div>
+            <div class="no-print">
+                <div class="input-group">
+                    <label for="employee-name-input">Name:</label>
+                    <input type="text" id="employee-name-input" class="name-input" placeholder="Enter your name">
+                    <button class="save-btn" onclick="saveEmployeeInfo()">Save</button>
+                </div>
+                <div class="input-group">
+                    <label for="date-input">Date:</label>
+                    <div class="date-input-group">
+                        <input type="date" id="date-input" class="date-input">
+                    </div>
+                </div>
+                
+                <div class="time-input-section">
+                    <div class="time-card">
+                        <h4>Time In</h4>
+                        <div class="time-input-group">
+                            <div class="time-input-container">
+                                <input type="number" min="1" max="12" class="time-number" id="time-in-hours" placeholder="HH">
+                                <span class="time-separator">:</span>
+                                <input type="number" min="0" max="59" class="time-number" id="time-in-minutes" placeholder="MM">
+                                <select class="ampm-select" id="time-in-ampm">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                </select>
+                            </div>
+                            <button class="time-btn btn-time-in" onclick="recordTimeIn()">Time In</button>
+                        </div>
+                    </div>
+                    
+                    <div class="time-card">
+                        <h4>Time Out</h4>
+                        <div class="time-input-group">
+                            <div class="time-input-container">
+                                <input type="number" min="1" max="12" class="time-number" id="time-out-hours" placeholder="HH">
+                                <span class="time-separator">:</span>
+                                <input type="number" min="0" max="59" class="time-number" id="time-out-minutes" placeholder="MM">
+                                <select class="ampm-select" id="time-out-ampm">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                </select>
+                            </div>
+                            <button class="time-btn btn-time-out" onclick="recordTimeOut()">Time Out</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="status-buttons">
+                    <button class="time-btn btn-holiday" onclick="markStatus('holiday')">Holiday</button>
+                    <button class="time-btn btn-absent" onclick="markStatus('absent')">Absent</button>
+                    <button class="time-btn btn-leave" onclick="markStatus('leave')">Leave</button>
+                    <button class="time-btn btn-dayoff" onclick="markStatus('dayoff')">Day Off</button>
+                </div>
+            </div>
+        </div>
+        
+        <table id="dtr-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                    <th>Total Hours (minus 1h break)</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody id="dtr-body">
+                <!-- Rows will be added dynamically -->
+            </tbody>
+        </table>
+        
+        <div class="summary">
+            <h3>Summary</h3>
+            <p><strong>Total Days Recorded:</strong> <span id="total-days">0</span> days</p>
+            <p><strong>Total Hours Worked:</strong> <span id="total-hours">0</span> hours (after breaks)</p>
+            <p><strong>Average Hours per Day:</strong> <span id="avg-hours">0</span> hours</p>
+            <p><strong>Holidays:</strong> <span id="total-holidays">0</span> days</p>
+            <p><strong>Absent Days:</strong> <span id="total-absent">0</span> days</p>
+            <p><strong>Leave Days:</strong> <span id="total-leave">0</span> days</p>
+            <p><strong>Days Off:</strong> <span id="total-dayoff">0</span> days</p>
+        </div>
+        
+        <div class="action-buttons no-print">
+            <button class="time-btn btn-primary" onclick="printDTR()">Print DTR</button>
+            <button class="time-btn btn-success" onclick="downloadAsJPEG()">Download as JPEG</button>
+            <button class="time-btn btn-danger" onclick="clearRecords()">Clear All Records</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables
+        let records = JSON.parse(localStorage.getItem('dtrRecords')) || [];
+        let employeeName = localStorage.getItem('employeeName') || '';
+        
+        // Status types
+        const STATUS_TYPES = {
+            HOLIDAY: 'holiday',
+            ABSENT: 'absent',
+            LEAVE: 'leave',
+            DAYOFF: 'dayoff'
+        };
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('employee-name-input').value = employeeName;
+            document.getElementById('date-input').valueAsDate = new Date();
+            updateTable();
+            updateSummary();
+            updateEmployeeNameDisplay();
+        });
+        
+        // Function to update the displayed employee name
+        function updateEmployeeNameDisplay() {
+            const displayElement = document.getElementById('printed-employee-name');
+            displayElement.textContent = `Employee: ${employeeName}`;
+        }
+        
+        // Helper function to get formatted time from inputs
+        function getTimeFromInput(hoursId, minutesId, ampmId) {
+            const hours = document.getElementById(hoursId).value;
+            const minutes = document.getElementById(minutesId).value;
+            const ampm = document.getElementById(ampmId).value;
+            
+            if (!hours || !minutes) return null;
+            
+            // Convert to 24-hour format for storage
+            let hour24 = parseInt(hours);
+            if (ampm === 'PM' && hour24 < 12) hour24 += 12;
+            if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+            
+            return `${hour24.toString().padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+        }
+        
+        // Function to format date as MM/DD/YYYY
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+        
+        // Function to format time as HH:MM AM/PM
+        function formatTime(timeString) {
+            if (!timeString) return '-';
+            const [hours, minutes] = timeString.split(':');
+            const date = new Date();
+            date.setHours(hours);
+            date.setMinutes(minutes);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Function to calculate hours worked with 1-hour break deduction
+        function calculateHours(record) {
+            if (record.status === STATUS_TYPES.HOLIDAY) return "Holiday";
+            if (record.status === STATUS_TYPES.ABSENT) return "Absent";
+            if (record.status === STATUS_TYPES.LEAVE) return "Leave";
+            if (record.status === STATUS_TYPES.DAYOFF) return "Day Off";
+            
+            if (!record.timeIn || !record.timeOut) return 0;
+            
+            // Convert all times to minutes
+            const toMinutes = (time) => {
+                const [hours, minutes] = time.split(':').map(Number);
+                return hours * 60 + minutes;
+            };
+            
+            const timeIn = toMinutes(record.timeIn);
+            const timeOut = toMinutes(record.timeOut);
+            
+            // Calculate total minutes worked (subtract 60 minutes for break)
+            const totalMinutes = (timeOut - timeIn) - 60;
+            
+            // If total is negative (worked less than 1 hour), return 0
+            if (totalMinutes < 0) return 0;
+            
+            const totalHours = totalMinutes / 60;
+            
+            return totalHours.toFixed(2);
+        }
+        
+        // Function to update the table
+        function updateTable() {
+            const tbody = document.getElementById('dtr-body');
+            tbody.innerHTML = '';
+            
+            // Sort records by date (newest first)
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                const dayOfWeek = new Date(record.date).toLocaleDateString('en-US', { weekday: 'short' });
+                
+                // Add appropriate class based on status
+                if (record.status === STATUS_TYPES.HOLIDAY) row.classList.add('holiday-row');
+                else if (record.status === STATUS_TYPES.ABSENT) row.classList.add('absent-row');
+                else if (record.status === STATUS_TYPES.LEAVE) row.classList.add('leave-row');
+                else if (record.status === STATUS_TYPES.DAYOFF) row.classList.add('dayoff-row');
+                
+                row.innerHTML = `
+                    <td>${formatDate(record.date)}</td>
+                    <td>${dayOfWeek}</td>
+                    <td>${formatTime(record.timeIn)}</td>
+                    <td>${formatTime(record.timeOut)}</td>
+                    <td>${calculateHours(record)}</td>
+                    <td>${getStatus(record)}</td>
+                    <td class="no-print"><input type="text" class="remarks-input" value="${record.remarks || ''}" onchange="updateRemarks('${record.date}', this.value)"></td>
+                    <td class="print-only">${record.remarks || ''}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Function to update remarks
+        function updateRemarks(date, remarks) {
+            const record = records.find(r => r.date === date);
+            if (record) {
+                record.remarks = remarks;
+                localStorage.setItem('dtrRecords', JSON.stringify(records));
+                updateTable(); // Refresh to show print version of remarks
+            }
+        }
+        
+        // Function to determine status
+        function getStatus(record) {
+            if (record.status === STATUS_TYPES.HOLIDAY) return 'Holiday';
+            if (record.status === STATUS_TYPES.ABSENT) return 'Absent';
+            if (record.status === STATUS_TYPES.LEAVE) return 'Leave';
+            if (record.status === STATUS_TYPES.DAYOFF) return 'Day Off';
+            if (!record.timeIn && !record.timeOut) return 'Absent';
+            if (record.timeIn && !record.timeOut) return 'Pending';
+            
+            if (record.timeIn && record.timeOut) {
+                const hours = parseFloat(calculateHours(record));
+                if (hours >= 6.8) return 'Whole Day';
+                if (hours > 0) return 'Half Day';
+                return 'Complete';
+            }
+            
+            return '-';
+        }
+        
+        // Function to update summary
+        function updateSummary() {
+            const dayCounter = records.length;
+            const holidayCounter = records.filter(r => r.status === STATUS_TYPES.HOLIDAY).length;
+            const absentCounter = records.filter(r => r.status === STATUS_TYPES.ABSENT || (!r.timeIn && !r.timeOut && !r.status)).length;
+            const leaveCounter = records.filter(r => r.status === STATUS_TYPES.LEAVE).length;
+            const dayoffCounter = records.filter(r => r.status === STATUS_TYPES.DAYOFF).length;
+            
+            const workingDays = records.filter(r => 
+                !r.status && 
+                (r.timeIn || r.timeOut)
+            );
+            
+            const totalHours = workingDays.reduce((sum, record) => {
+                const hours = parseFloat(calculateHours(record)) || 0;
+                return sum + hours;
+            }, 0);
+            
+            const avgHours = workingDays.length > 0 ? (totalHours / workingDays.length).toFixed(2) : 0;
+            
+            document.getElementById('total-days').textContent = dayCounter;
+            document.getElementById('total-hours').textContent = totalHours.toFixed(2);
+            document.getElementById('avg-hours').textContent = avgHours;
+            document.getElementById('total-holidays').textContent = holidayCounter;
+            document.getElementById('total-absent').textContent = absentCounter;
+            document.getElementById('total-leave').textContent = leaveCounter;
+            document.getElementById('total-dayoff').textContent = dayoffCounter;
+        }
+        
+        // Save employee info
+        function saveEmployeeInfo() {
+            employeeName = document.getElementById('employee-name-input').value.trim();
+            if (employeeName === '') {
+                alert('Please enter your name');
+                return;
+            }
+            localStorage.setItem('employeeName', employeeName);
+            updateEmployeeNameDisplay();
+            alert('Information saved successfully!');
+        }
+        
+        // Mark status (holiday, absent, leave, day off)
+        function markStatus(status) {
+            if (!employeeName) {
+                alert('Please enter and save your name first');
+                return;
+            }
+            
+            const dateInput = document.getElementById('date-input').value;
+            if (!dateInput) {
+                alert('Please select a date');
+                return;
+            }
+            
+            let record = records.find(r => r.date === dateInput);
+            
+            if (!record) {
+                record = {
+                    date: dateInput,
+                    timeIn: null,
+                    timeOut: null,
+                    status: status,
+                    employeeName: employeeName,
+                    remarks: null
+                };
+                records.push(record);
+            } else {
+                if (confirm(`Record already exists for this date. Mark as ${status}?`)) {
+                    record.status = status;
+                    // Clear any existing time entries
+                    record.timeIn = null;
+                    record.timeOut = null;
+                } else {
+                    return;
+                }
+            }
+            
+            localStorage.setItem('dtrRecords', JSON.stringify(records));
+            updateTable();
+            updateSummary();
+        }
+        
+        // Record Time In
+        function recordTimeIn() {
+            if (!employeeName) {
+                alert('Please enter and save your name first');
+                return;
+            }
+            
+            const dateInput = document.getElementById('date-input').value;
+            if (!dateInput) {
+                alert('Please select a date');
+                return;
+            }
+            
+            const timeIn = getTimeFromInput('time-in-hours', 'time-in-minutes', 'time-in-ampm');
+            if (!timeIn) {
+                alert('Please enter Time In');
+                return;
+            }
+            
+            let record = records.find(r => r.date === dateInput);
+            
+            if (!record) {
+                record = {
+                    date: dateInput,
+                    timeIn: timeIn,
+                    timeOut: null,
+                    status: null,
+                    employeeName: employeeName,
+                    remarks: null
+                };
+                records.push(record);
+            } else if (record.status) {
+                if (confirm(`This day is marked as ${record.status}. Remove status and record Time In?`)) {
+                    record.status = null;
+                    record.timeIn = timeIn;
+                } else {
+                    return;
+                }
+            } else if (!record.timeIn) {
+                record.timeIn = timeIn;
+            } else {
+                if (confirm('Time In already exists for this date. Overwrite?')) {
+                    record.timeIn = timeIn;
+                } else {
+                    return;
+                }
+            }
+            
+            localStorage.setItem('dtrRecords', JSON.stringify(records));
+            updateTable();
+            updateSummary();
+            document.getElementById('time-in-hours').value = '';
+            document.getElementById('time-in-minutes').value = '';
+        }
+        
+        // Record Time Out
+        function recordTimeOut() {
+            if (!employeeName) {
+                alert('Please enter and save your name first');
+                return;
+            }
+            
+            const dateInput = document.getElementById('date-input').value;
+            if (!dateInput) {
+                alert('Please select a date');
+                return;
+            }
+            
+            const timeOut = getTimeFromInput('time-out-hours', 'time-out-minutes', 'time-out-ampm');
+            if (!timeOut) {
+                alert('Please enter Time Out');
+                return;
+            }
+            
+            let record = records.find(r => r.date === dateInput);
+            
+            if (!record) {
+                if (confirm('No Time In found. Add record with only Time Out?')) {
+                    record = {
+                        date: dateInput,
+                        timeIn: null,
+                        timeOut: timeOut,
+                        status: null,
+                        employeeName: employeeName,
+                        remarks: null
+                    };
+                    records.push(record);
+                } else {
+                    return;
+                }
+            } else if (record.status) {
+                alert(`Cannot record time for a ${record.status} day. Please remove status first.`);
+                return;
+            } else if (!record.timeOut) {
+                record.timeOut = timeOut;
+            } else {
+                if (confirm('Time Out already exists. Overwrite?')) {
+                    record.timeOut = timeOut;
+                } else {
+                    return;
+                }
+            }
+            
+            localStorage.setItem('dtrRecords', JSON.stringify(records));
+            updateTable();
+            updateSummary();
+            document.getElementById('time-out-hours').value = '';
+            document.getElementById('time-out-minutes').value = '';
+        }
+        
+        // Print function
+        function printDTR() {
+            if (!employeeName) {
+                alert('Please enter and save your name first');
+                return;
+            }
+            window.print();
+        }
+        
+        // Download as JPEG function
+        function downloadAsJPEG() {
+            if (!employeeName) {
+                alert('Please enter and save your name first');
+                return;
+            }
+            
+            document.getElementById('printed-employee-name').style.display = 'block';
+            const elementsToHide = document.querySelectorAll('.no-print');
+            elementsToHide.forEach(el => el.style.visibility = 'hidden');
+            
+            html2canvas(document.querySelector('.container')).then(canvas => {
+                elementsToHide.forEach(el => el.style.visibility = 'visible');
+                document.getElementById('printed-employee-name').style.display = 'none';
+                
+                const link = document.createElement('a');
+                link.download = `DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                link.click();
+            });
+        }
+        
+        // Clear all records
+        function clearRecords() {
+            if (confirm('Are you sure you want to clear all records?')) {
+                records = [];
+                localStorage.setItem('dtrRecords', JSON.stringify(records));
+                updateTable();
+                updateSummary();
+            }
+        }
+    </script>
+</body>
+</html>
