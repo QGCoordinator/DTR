@@ -13,7 +13,7 @@
             font-size: 14px;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
             background-color: white;
             padding: 10px;
@@ -118,6 +118,9 @@
         .btn-dayoff {
             background-color: #795548; /* Brown */
         }
+        .btn-pdf {
+            background-color: #e91e63; /* Pink */
+        }
         .input-group {
             margin-bottom: 8px;
         }
@@ -140,6 +143,9 @@
         .action-buttons {
             text-align: center;
             margin-top: 10px;
+            display: flex;
+            gap: 5px;
+            justify-content: center;
         }
         .time-input-container {
             display: flex;
@@ -175,6 +181,12 @@
         .dayoff-row {
             background-color: #efebe9 !important; /* Light brown for day off rows */
         }
+        .wholeday-row {
+            background-color: #e8f5e9 !important; /* Light green for whole day */
+        }
+        .halfday-row {
+            background-color: #fffde7 !important; /* Light yellow for half day */
+        }
         .date-input-group {
             display: flex;
             align-items: center;
@@ -193,10 +205,10 @@
             padding: 3px;
             border: 1px solid #ddd;
             border-radius: 3px;
-            font-size: 12px;
+            font-size: 11px;
         }
-        .print-only {
-            display: none;
+        .remarks-cell {
+            min-width: 150px;
         }
         
         @media print {
@@ -207,6 +219,7 @@
             .container {
                 padding: 5px;
                 box-shadow: none;
+                max-width: 100%;
             }
             .no-print {
                 display: none !important;
@@ -245,15 +258,21 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            .remarks-input {
-                display: none;
+            .wholeday-row {
+                background-color: #e8f5e9 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
-            .print-only {
-                display: table-cell;
+            .halfday-row {
+                background-color: #fffde7 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
     </style>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -343,10 +362,13 @@
             <p><strong>Absent Days:</strong> <span id="total-absent">0</span> days</p>
             <p><strong>Leave Days:</strong> <span id="total-leave">0</span> days</p>
             <p><strong>Days Off:</strong> <span id="total-dayoff">0</span> days</p>
+            <p><strong>Whole Days:</strong> <span id="total-wholeday">0</span> days</p>
+            <p><strong>Half Days:</strong> <span id="total-halfday">0</span> days</p>
         </div>
         
         <div class="action-buttons no-print">
             <button class="time-btn btn-primary" onclick="printDTR()">Print DTR</button>
+            <button class="time-btn btn-pdf" onclick="saveAsPDF()">Save as PDF</button>
             <button class="time-btn btn-success" onclick="downloadAsJPEG()">Download as JPEG</button>
             <button class="time-btn btn-danger" onclick="clearRecords()">Clear All Records</button>
         </div>
@@ -362,7 +384,9 @@
             HOLIDAY: 'holiday',
             ABSENT: 'absent',
             LEAVE: 'leave',
-            DAYOFF: 'dayoff'
+            DAYOFF: 'dayoff',
+            WHOLEDAY: 'wholeday',
+            HALFDAY: 'halfday'
         };
         
         // Initialize the page
@@ -459,6 +483,20 @@
                 else if (record.status === STATUS_TYPES.ABSENT) row.classList.add('absent-row');
                 else if (record.status === STATUS_TYPES.LEAVE) row.classList.add('leave-row');
                 else if (record.status === STATUS_TYPES.DAYOFF) row.classList.add('dayoff-row');
+                else if (record.status === STATUS_TYPES.WHOLEDAY) row.classList.add('wholeday-row');
+                else if (record.status === STATUS_TYPES.HALFDAY) row.classList.add('halfday-row');
+                
+                // Auto-update status based on hours worked
+                if (!record.status && record.timeIn && record.timeOut) {
+                    const hoursWorked = parseFloat(calculateHours(record));
+                    if (hoursWorked >= 6.8) {
+                        record.status = STATUS_TYPES.WHOLEDAY;
+                        row.classList.add('wholeday-row');
+                    } else if (hoursWorked > 0) {
+                        record.status = STATUS_TYPES.HALFDAY;
+                        row.classList.add('halfday-row');
+                    }
+                }
                 
                 row.innerHTML = `
                     <td>${formatDate(record.date)}</td>
@@ -467,22 +505,17 @@
                     <td>${formatTime(record.timeOut)}</td>
                     <td>${calculateHours(record)}</td>
                     <td>${getStatus(record)}</td>
-                    <td class="no-print"><input type="text" class="remarks-input" value="${record.remarks || ''}" onchange="updateRemarks('${record.date}', this.value)"></td>
-                    <td class="print-only">${record.remarks || ''}</td>
+                    <td class="remarks-cell">
+                        ${record.remarks ? record.remarks : ''}
+                        <input type="text" class="remarks-input no-print" 
+                               value="${record.remarks || ''}" 
+                               onchange="updateRemarks('${record.date}', this.value)"
+                               placeholder="Enter remarks">
+                    </td>
                 `;
                 
                 tbody.appendChild(row);
             });
-        }
-        
-        // Function to update remarks
-        function updateRemarks(date, remarks) {
-            const record = records.find(r => r.date === date);
-            if (record) {
-                record.remarks = remarks;
-                localStorage.setItem('dtrRecords', JSON.stringify(records));
-                updateTable(); // Refresh to show print version of remarks
-            }
         }
         
         // Function to determine status
@@ -491,17 +524,24 @@
             if (record.status === STATUS_TYPES.ABSENT) return 'Absent';
             if (record.status === STATUS_TYPES.LEAVE) return 'Leave';
             if (record.status === STATUS_TYPES.DAYOFF) return 'Day Off';
+            if (record.status === STATUS_TYPES.WHOLEDAY) return 'Whole Day';
+            if (record.status === STATUS_TYPES.HALFDAY) return 'Half Day';
             if (!record.timeIn && !record.timeOut) return 'Absent';
             if (record.timeIn && !record.timeOut) return 'Pending';
-            
             if (record.timeIn && record.timeOut) {
-                const hours = parseFloat(calculateHours(record));
-                if (hours >= 6.8) return 'Whole Day';
-                if (hours > 0) return 'Half Day';
-                return 'Complete';
+                const hoursWorked = parseFloat(calculateHours(record));
+                return hoursWorked >= 6.8 ? 'Whole Day' : (hoursWorked > 0 ? 'Half Day' : 'Pending');
             }
-            
             return '-';
+        }
+        
+        // Function to update remarks
+        function updateRemarks(date, remarks) {
+            const record = records.find(r => r.date === date);
+            if (record) {
+                record.remarks = remarks;
+                localStorage.setItem('dtrRecords', JSON.stringify(records));
+            }
         }
         
         // Function to update summary
@@ -511,18 +551,32 @@
             const absentCounter = records.filter(r => r.status === STATUS_TYPES.ABSENT || (!r.timeIn && !r.timeOut && !r.status)).length;
             const leaveCounter = records.filter(r => r.status === STATUS_TYPES.LEAVE).length;
             const dayoffCounter = records.filter(r => r.status === STATUS_TYPES.DAYOFF).length;
+            const wholedayCounter = records.filter(r => r.status === STATUS_TYPES.WHOLEDAY).length;
+            const halfdayCounter = records.filter(r => r.status === STATUS_TYPES.HALFDAY).length;
             
             const workingDays = records.filter(r => 
                 !r.status && 
                 (r.timeIn || r.timeOut)
             );
             
-            const totalHours = workingDays.reduce((sum, record) => {
+            const totalHours = records.reduce((sum, record) => {
+                if (record.status === STATUS_TYPES.HOLIDAY || 
+                    record.status === STATUS_TYPES.ABSENT || 
+                    record.status === STATUS_TYPES.LEAVE || 
+                    record.status === STATUS_TYPES.DAYOFF) {
+                    return sum;
+                }
                 const hours = parseFloat(calculateHours(record)) || 0;
                 return sum + hours;
             }, 0);
             
-            const avgHours = workingDays.length > 0 ? (totalHours / workingDays.length).toFixed(2) : 0;
+            const workingDaysCount = records.filter(r => 
+                r.status === STATUS_TYPES.WHOLEDAY || 
+                r.status === STATUS_TYPES.HALFDAY ||
+                (!r.status && r.timeIn && r.timeOut)
+            ).length;
+            
+            const avgHours = workingDaysCount > 0 ? (totalHours / workingDaysCount).toFixed(2) : 0;
             
             document.getElementById('total-days').textContent = dayCounter;
             document.getElementById('total-hours').textContent = totalHours.toFixed(2);
@@ -531,6 +585,8 @@
             document.getElementById('total-absent').textContent = absentCounter;
             document.getElementById('total-leave').textContent = leaveCounter;
             document.getElementById('total-dayoff').textContent = dayoffCounter;
+            document.getElementById('total-wholeday').textContent = wholedayCounter;
+            document.getElementById('total-halfday').textContent = halfdayCounter;
         }
         
         // Save employee info
@@ -567,7 +623,7 @@
                     timeOut: null,
                     status: status,
                     employeeName: employeeName,
-                    remarks: null
+                    remarks: ''
                 };
                 records.push(record);
             } else {
@@ -614,7 +670,7 @@
                     timeOut: null,
                     status: null,
                     employeeName: employeeName,
-                    remarks: null
+                    remarks: ''
                 };
                 records.push(record);
             } else if (record.status) {
@@ -670,7 +726,7 @@
                         timeOut: timeOut,
                         status: null,
                         employeeName: employeeName,
-                        remarks: null
+                        remarks: ''
                     };
                     records.push(record);
                 } else {
@@ -724,6 +780,49 @@
                 link.download = `DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.jpg`;
                 link.href = canvas.toDataURL('image/jpeg', 0.9);
                 link.click();
+            });
+        }
+        
+        // Save as PDF function
+        function saveAsPDF() {
+            if (!employeeName) {
+                alert('Please enter and save your name first');
+                return;
+            }
+            
+            // Temporarily show the employee name and hide no-print elements
+            document.getElementById('printed-employee-name').style.display = 'block';
+            const elementsToHide = document.querySelectorAll('.no-print');
+            elementsToHide.forEach(el => el.style.visibility = 'hidden');
+            
+            html2canvas(document.querySelector('.container')).then(canvas => {
+                // Restore visibility
+                elementsToHide.forEach(el => el.style.visibility = 'visible');
+                document.getElementById('printed-employee-name').style.display = 'none';
+                
+                // Create PDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                // Add new pages if content is too long
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                // Save the PDF
+                pdf.save(`DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`);
             });
         }
         
