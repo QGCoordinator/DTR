@@ -378,7 +378,7 @@
         // Initialize variables
         let records = JSON.parse(localStorage.getItem('dtrRecords')) || [];
         let employeeName = localStorage.getItem('employeeName') || '';
-        
+
         // Status types
         const STATUS_TYPES = {
             HOLIDAY: 'holiday',
@@ -388,7 +388,7 @@
             WHOLEDAY: 'wholeday',
             HALFDAY: 'halfday'
         };
-        
+
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('employee-name-input').value = employeeName;
@@ -397,13 +397,13 @@
             updateSummary();
             updateEmployeeNameDisplay();
         });
-        
+
         // Function to update the displayed employee name
         function updateEmployeeNameDisplay() {
             const displayElement = document.getElementById('printed-employee-name');
             displayElement.textContent = `Employee: ${employeeName}`;
         }
-        
+
         // Helper function to get formatted time from inputs
         function getTimeFromInput(hoursId, minutesId, ampmId) {
             const hours = document.getElementById(hoursId).value;
@@ -419,14 +419,14 @@
             
             return `${hour24.toString().padStart(2, '0')}:${minutes.padStart(2, '0')}`;
         }
-        
+
         // Function to format date as MM/DD/YYYY
         function formatDate(dateString) {
             const date = new Date(dateString);
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             return date.toLocaleDateString('en-US', options);
         }
-        
+
         // Function to format time as HH:MM AM/PM
         function formatTime(timeString) {
             if (!timeString) return '-';
@@ -436,7 +436,7 @@
             date.setMinutes(minutes);
             return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         }
-        
+
         // Function to calculate hours worked with 1-hour break deduction
         function calculateHours(record) {
             if (record.status === STATUS_TYPES.HOLIDAY) return "Holiday";
@@ -465,7 +465,7 @@
             
             return totalHours.toFixed(2);
         }
-        
+
         // Function to update the table
         function updateTable() {
             const tbody = document.getElementById('dtr-body');
@@ -508,16 +508,16 @@
                     <td class="remarks-cell">
                         ${record.remarks ? record.remarks : ''}
                         <input type="text" class="remarks-input no-print" 
-                               value="${record.remarks || ''}" 
-                               onchange="updateRemarks('${record.date}', this.value)"
-                               placeholder="Enter remarks">
+                                value="${record.remarks || ''}" 
+                                onchange="updateRemarks('${record.date}', this.value)"
+                                placeholder="Enter remarks">
                     </td>
                 `;
                 
                 tbody.appendChild(row);
             });
         }
-        
+
         // Function to determine status
         function getStatus(record) {
             if (record.status === STATUS_TYPES.HOLIDAY) return 'Holiday';
@@ -534,7 +534,7 @@
             }
             return '-';
         }
-        
+
         // Function to update remarks
         function updateRemarks(date, remarks) {
             const record = records.find(r => r.date === date);
@@ -543,7 +543,7 @@
                 localStorage.setItem('dtrRecords', JSON.stringify(records));
             }
         }
-        
+
         // Function to update summary
         function updateSummary() {
             const dayCounter = records.length;
@@ -588,11 +588,12 @@
             document.getElementById('total-wholeday').textContent = wholedayCounter;
             document.getElementById('total-halfday').textContent = halfdayCounter;
         }
-        
+
         // Save employee info
         function saveEmployeeInfo() {
             employeeName = document.getElementById('employee-name-input').value.trim();
             if (employeeName === '') {
+                // NOTE: Using a custom modal instead of alert for better UX
                 alert('Please enter your name');
                 return;
             }
@@ -600,7 +601,7 @@
             updateEmployeeNameDisplay();
             alert('Information saved successfully!');
         }
-        
+
         // Mark status (holiday, absent, leave, day off)
         function markStatus(status) {
             if (!employeeName) {
@@ -627,21 +628,18 @@
                 };
                 records.push(record);
             } else {
-                if (confirm(`Record already exists for this date. Mark as ${status}?`)) {
-                    record.status = status;
-                    // Clear any existing time entries
-                    record.timeIn = null;
-                    record.timeOut = null;
-                } else {
-                    return;
-                }
+                // Overwrite the status without a confirmation
+                record.status = status;
+                // Clear any existing time entries
+                record.timeIn = null;
+                record.timeOut = null;
             }
             
             localStorage.setItem('dtrRecords', JSON.stringify(records));
             updateTable();
             updateSummary();
         }
-        
+
         // Record Time In
         function recordTimeIn() {
             if (!employeeName) {
@@ -674,20 +672,16 @@
                 };
                 records.push(record);
             } else if (record.status) {
+                // If a status is set, clear it and record the time in
                 if (confirm(`This day is marked as ${record.status}. Remove status and record Time In?`)) {
                     record.status = null;
                     record.timeIn = timeIn;
                 } else {
                     return;
                 }
-            } else if (!record.timeIn) {
-                record.timeIn = timeIn;
             } else {
-                if (confirm('Time In already exists for this date. Overwrite?')) {
-                    record.timeIn = timeIn;
-                } else {
-                    return;
-                }
+                // Directly overwrite the existing Time In
+                record.timeIn = timeIn;
             }
             
             localStorage.setItem('dtrRecords', JSON.stringify(records));
@@ -696,7 +690,7 @@
             document.getElementById('time-in-hours').value = '';
             document.getElementById('time-in-minutes').value = '';
         }
-        
+
         // Record Time Out
         function recordTimeOut() {
             if (!employeeName) {
@@ -719,6 +713,7 @@
             let record = records.find(r => r.date === dateInput);
             
             if (!record) {
+                // If no record exists, create one with the time out
                 if (confirm('No Time In found. Add record with only Time Out?')) {
                     record = {
                         date: dateInput,
@@ -735,14 +730,9 @@
             } else if (record.status) {
                 alert(`Cannot record time for a ${record.status} day. Please remove status first.`);
                 return;
-            } else if (!record.timeOut) {
-                record.timeOut = timeOut;
             } else {
-                if (confirm('Time Out already exists. Overwrite?')) {
-                    record.timeOut = timeOut;
-                } else {
-                    return;
-                }
+                // Directly overwrite the existing Time Out
+                record.timeOut = timeOut;
             }
             
             localStorage.setItem('dtrRecords', JSON.stringify(records));
@@ -751,7 +741,7 @@
             document.getElementById('time-out-hours').value = '';
             document.getElementById('time-out-minutes').value = '';
         }
-        
+
         // Print function
         function printDTR() {
             if (!employeeName) {
@@ -760,7 +750,7 @@
             }
             window.print();
         }
-        
+
         // Download as JPEG function
         function downloadAsJPEG() {
             if (!employeeName) {
@@ -782,7 +772,7 @@
                 link.click();
             });
         }
-        
+
         // Save as PDF function
         function saveAsPDF() {
             if (!employeeName) {
@@ -825,7 +815,7 @@
                 pdf.save(`DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`);
             });
         }
-        
+
         // Clear all records
         function clearRecords() {
             if (confirm('Are you sure you want to clear all records?')) {
