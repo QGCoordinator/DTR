@@ -6,264 +6,360 @@
     <title>Daily Time Record (DTR) Tracker</title>
     <style>
         /* General Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 15px;
-            background-color: #eef1f5; /* Light Gray Background */
+            padding: 20px;
+            background-color: #f5f7fa;
             font-size: 14px;
             color: #333;
+            line-height: 1.5;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
             background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         }
         h1 {
             text-align: center;
             color: #2c3e50;
-            font-size: 24px;
-            margin: 0 0 15px;
-            padding-bottom: 10px;
+            font-size: 26px;
+            margin: 0 0 25px;
+            padding-bottom: 15px;
             border-bottom: 2px solid #ecf0f1;
+            font-weight: 600;
         }
-        .employee-info-section, .time-input-section {
-            margin-bottom: 15px;
-            padding: 15px;
+        
+        /* Employee Info Section */
+        .employee-info-section {
+            margin-bottom: 25px;
+            padding: 20px;
             background-color: #f8f9fb;
             border: 1px solid #e1e4e8;
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
-            align-items: flex-start;
+            gap: 25px;
+            align-items: flex-end;
         }
-        .info-group, .time-card {
+        .info-group {
             flex: 1;
-            min-width: 250px;
+            min-width: 280px;
         }
-        .time-card h4 {
-            margin: 0 0 10px;
-            font-size: 16px;
-            color: #34495e;
-            border-bottom: 1px solid #ecf0f1;
-            padding-bottom: 5px;
-        }
-
-        /* Input Styles */
-        label {
+        .info-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #555;
+            font-size: 14px;
         }
-        .name-input, .date-input, .time-number, .ampm-select, .remarks-input {
-            padding: 8px;
+        .name-input, .date-input {
+            padding: 10px 12px;
             border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
+            border-radius: 5px;
+            font-size: 15px;
+            width: 100%;
+            transition: border-color 0.3s;
         }
-        .name-input { width: 250px; }
-        .date-input { width: 100%; }
-        
-        /* Time Input Grouping */
-        .time-input-container {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            margin-right: 10px;
+        .name-input:focus, .date-input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
-        .time-number { width: 50px; text-align: center; }
-        .ampm-select { padding: 8px 4px; width: 60px;}
-        .time-separator { font-weight: bold; color: #555; }
-        
-        /* Button Styles - IMPROVED */
-        .time-btn, .save-btn {
-            padding: 10px 16px;
-            font-size: 14px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        .save-btn {
+            padding: 10px 20px;
+            background-color: #2ecc71;
             color: white;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
             font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+            width: 100%;
         }
-        .time-btn:hover, .save-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        .save-btn:hover {
+            background-color: #27ae60;
         }
-        .time-btn:active, .save-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        
+        /* Time Input Section */
+        .time-input-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #f8f9fb;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
         }
-        .btn-primary { background-color: #3498db; } /* Blue */
-        .btn-primary:hover { background-color: #2980b9; }
-        .btn-success { background-color: #2ecc71; } /* Green */
-        .btn-success:hover { background-color: #27ae60; }
-        .btn-danger { background-color: #e74c3c; } /* Red */
-        .btn-danger:hover { background-color: #c0392b; }
-        .btn-secondary { background-color: #95a5a6; } /* Gray */
-        .btn-secondary:hover { background-color: #7f8c8d; }
-
+        .time-card {
+            flex: 1;
+            min-width: 280px;
+        }
+        .time-card h4 {
+            margin: 0 0 15px;
+            font-size: 17px;
+            color: #34495e;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        /* Time Input Controls */
         .time-entry-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .time-input-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-right: 10px;
+        }
+        .time-number {
+            width: 60px;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+        .ampm-select {
+            padding: 10px 8px;
+            width: 70px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+        .time-separator {
+            font-weight: bold;
+            color: #555;
+            font-size: 18px;
         }
         
-        /* Status Buttons - IMPROVED */
+        /* Buttons */
+        .time-btn {
+            padding: 12px 20px;
+            font-size: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+        .time-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .time-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .btn-primary { 
+            background-color: #3498db; 
+        }
+        .btn-primary:hover { 
+            background-color: #2980b9; 
+        }
+        .btn-danger { 
+            background-color: #e74c3c; 
+        }
+        .btn-danger:hover { 
+            background-color: #c0392b; 
+        }
+        
+        /* Status Buttons */
         .status-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
+            margin-top: 10px;
         }
         .status-buttons button {
             flex: 1;
-            min-width: 100px;
-            padding: 12px 8px;
-            font-size: 13px;
-        }
-        .btn-holiday { background-color: #9b59b6; } /* Purple */
-        .btn-holiday:hover { background-color: #8e44ad; }
-        .btn-absent { background-color: #e67e22; } /* Orange */
-        .btn-absent:hover { background-color: #d35400; }
-        .btn-leave { background-color: #f1c40f; color: #333; } /* Yellow */
-        .btn-leave:hover { background-color: #f39c12; }
-        .btn-dayoff { background-color: #34495e; } /* Dark Blue/Gray */
-        .btn-dayoff:hover { background-color: #2c3e50; }
-
-        /* Action Buttons - IMPROVED */
-        .action-buttons {
-            text-align: center;
-            margin-top: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-        }
-        .action-buttons button {
-            padding: 12px 20px;
-            min-width: 180px;
+            min-width: 110px;
+            padding: 12px 10px;
             font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+        }
+        .btn-holiday { 
+            background-color: #9b59b6; 
+        }
+        .btn-holiday:hover { 
+            background-color: #8e44ad; 
+        }
+        .btn-absent { 
+            background-color: #e67e22; 
+        }
+        .btn-absent:hover { 
+            background-color: #d35400; 
+        }
+        .btn-leave { 
+            background-color: #f1c40f; 
+            color: #333; 
+        }
+        .btn-leave:hover { 
+            background-color: #f39c12; 
+        }
+        .btn-dayoff { 
+            background-color: #34495e; 
+        }
+        .btn-dayoff:hover { 
+            background-color: #2c3e50; 
         }
         
-        /* Button Groups for Better Organization */
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .button-group-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 8px;
-            width: 100%;
-        }
-        .export-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .export-buttons button {
-            flex: 1;
-            min-width: 160px;
-        }
-
         /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
-            font-size: 13px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px;
             text-align: center;
         }
         th {
-            background-color: #3498db; /* Header Blue */
+            background-color: #3498db;
             color: white;
-            font-size: 13px;
-            position: sticky; /* Sticky header for long tables */
+            font-size: 14px;
+            font-weight: 600;
+            position: sticky;
             top: 0;
         }
         tr:nth-child(even) {
-            background-color: #f2f2f2; /* Zebra striping */
+            background-color: #f9f9f9;
         }
-
-        /* Summary and Action Styles */
-        .summary {
-            margin-top: 15px;
-            padding: 15px;
-            background-color: #ecf0f1;
-            border-radius: 6px;
-            font-size: 13px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px 30px;
-            justify-content: space-between;
+        
+        /* Status Row Styling */
+        .holiday-row { 
+            background-color: #f3e5f5 !important; 
         }
-        .summary h3 { margin-top: 0; color: #2c3e50; font-size: 16px; width: 100%; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-        .summary p { margin: 0; }
-        .summary strong { color: #3498db; }
-
-        .employee-name-display {
-            font-weight: bold;
-            font-size: 16px;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            display: none; /* Hidden on screen, shown in print */
-            width: 100%;
+        .absent-row { 
+            background-color: #faebd7 !important; 
         }
-
-        /* Status Row Styling (Subtle) */
-        .holiday-row { background-color: #f3e5f5 !important; }
-        .absent-row { background-color: #faebd7 !important; } /* Light peach */
-        .leave-row { background-color: #fffff0 !important; } /* Very light yellow */
-        .dayoff-row { background-color: #e6eef5 !important; } /* Light blue-gray */
-        .wholeday-row { background-color: #e9f5e9 !important; } /* Light green */
-        .halfday-row { background-color: #fff8e1 !important; } /* Light cream */
-
+        .leave-row { 
+            background-color: #fffff0 !important; 
+        }
+        .dayoff-row { 
+            background-color: #e6eef5 !important; 
+        }
+        .wholeday-row { 
+            background-color: #e9f5e9 !important; 
+        }
+        .halfday-row { 
+            background-color: #fff8e1 !important; 
+        }
+        
         /* Remarks Input in Table */
         .remarks-input {
             width: 100%;
-            padding: 3px;
+            padding: 8px;
             border: 1px solid #ddd;
-            border-radius: 3px;
-            font-size: 11px;
+            border-radius: 4px;
+            font-size: 13px;
         }
         .remarks-cell {
-            min-width: 120px;
+            min-width: 150px;
         }
-
+        
+        /* Summary Section */
+        .summary {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 40px;
+            justify-content: space-between;
+        }
+        .summary h3 { 
+            margin-top: 0; 
+            color: #2c3e50; 
+            font-size: 18px; 
+            width: 100%; 
+            border-bottom: 1px solid #bdc3c7; 
+            padding-bottom: 10px; 
+            font-weight: 600;
+        }
+        .summary p { 
+            margin: 0; 
+            min-width: 200px;
+        }
+        .summary strong { 
+            color: #3498db; 
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            text-align: center;
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        .action-buttons button {
+            padding: 14px 24px;
+            min-width: 200px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-secondary { 
+            background-color: #95a5a6; 
+        }
+        .btn-secondary:hover { 
+            background-color: #7f8c8d; 
+        }
+        
+        /* Employee Name Display */
+        .employee-name-display {
+            font-weight: bold;
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: none;
+            width: 100%;
+            padding: 10px;
+            background-color: #f8f9fb;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        
         /* Notification Area */
         #notification-area {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 1000;
-            max-width: 300px;
+            max-width: 350px;
         }
         .notification {
-            padding: 10px 15px;
+            padding: 12px 18px;
             margin-bottom: 10px;
-            border-radius: 5px;
+            border-radius: 6px;
             color: white;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-weight: 600;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
             opacity: 0;
             transition: opacity 0.5s, transform 0.5s;
             transform: translateY(-20px);
@@ -272,21 +368,52 @@
             opacity: 1;
             transform: translateY(0);
         }
-        .notification.error { background-color: #e74c3c; }
-        .notification.success { background-color: #2ecc71; }
-        .notification.warning { background-color: #f1c40f; color: #333; }
-
-
+        .notification.error { 
+            background-color: #e74c3c; 
+        }
+        .notification.success { 
+            background-color: #2ecc71; 
+        }
+        .notification.warning { 
+            background-color: #f1c40f; 
+            color: #333; 
+        }
+        
         /* Print Styles */
         @media print {
-            body { padding: 0; font-size: 11px; }
-            .container { padding: 5px; box-shadow: none; max-width: 100%; }
-            .no-print { display: none !important; }
-            .employee-name-display { display: block !important; margin: 0 0 5px; }
-            h1 { font-size: 20px; margin: 2px 0 10px; }
-            table { font-size: 10px; }
-            th, td { padding: 4px; border-color: #aaa; }
-            .summary { background-color: #ecf0f1 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { 
+                padding: 0; 
+                font-size: 12px; 
+                background: white; 
+            }
+            .container { 
+                padding: 10px; 
+                box-shadow: none; 
+                max-width: 100%; 
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            .employee-name-display { 
+                display: block !important; 
+                margin: 0 0 10px; 
+            }
+            h1 { 
+                font-size: 22px; 
+                margin: 5px 0 15px; 
+            }
+            table { 
+                font-size: 11px; 
+            }
+            th, td { 
+                padding: 8px; 
+                border-color: #aaa; 
+            }
+            .summary { 
+                background-color: #ecf0f1 !important; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+            }
             /* Force row colors for print */
             .holiday-row, .absent-row, .leave-row, .dayoff-row, .wholeday-row, .halfday-row {
                 -webkit-print-color-adjust: exact;
@@ -296,16 +423,28 @@
         
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            .employee-info-section, .time-input-section {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .info-group, .time-card {
+                min-width: 100%;
+            }
+            .time-entry-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .status-buttons button {
+                min-width: calc(50% - 5px);
+            }
             .action-buttons button {
                 min-width: 100%;
             }
-            .export-buttons button {
-                min-width: 100%;
-            }
-            .status-buttons button {
-                min-width: calc(50% - 4px);
-            }
-            .time-card {
+            .summary p {
                 min-width: 100%;
             }
         }
@@ -322,19 +461,18 @@
         <div class="employee-info-section no-print">
             <div class="info-group">
                 <label for="employee-name-input">Employee Name:</label>
-                <input type="text" id="employee-name-input" class="name-input" placeholder="Enter your full name">
-                <button class="save-btn btn-success" onclick="saveEmployeeInfo()">Save Name</button>
+                <input type="text" id="employee-name-input" class="name-input" placeholder="Enter your full name" value="DEAN VICTOR MONTALVO">
+                <button class="save-btn" onclick="saveEmployeeInfo()">Save Name</button>
             </div>
             <div class="info-group">
                 <label for="date-input">Select Date:</label>
-                <input type="date" id="date-input" class="date-input">
+                <input type="date" id="date-input" class="date-input" value="2025-09-30">
             </div>
         </div>
 
         <div class="employee-name-display" id="printed-employee-name"></div>
         
         <div class="time-input-section no-print">
-            
             <div class="time-card">
                 <h4>Time In</h4>
                 <div class="time-entry-row">
@@ -367,7 +505,7 @@
                 </div>
             </div>
 
-            <div class="time-card" style="flex: 2; min-width: 400px;">
+            <div class="time-card">
                 <h4>Status Markers (Overrides Time)</h4>
                 <div class="status-buttons">
                     <button class="time-btn btn-holiday" onclick="markStatus('holiday')">Holiday</button>
@@ -391,7 +529,8 @@
                 </tr>
             </thead>
             <tbody id="dtr-body">
-                </tbody>
+                <!-- Table rows will be populated by JavaScript -->
+            </tbody>
         </table>
         
         <div class="summary">
@@ -408,19 +547,10 @@
         </div>
         
         <div class="action-buttons no-print">
-            <div class="button-group">
-                <div class="button-group-title">Export Options</div>
-                <div class="export-buttons">
-                    <button class="time-btn btn-primary" onclick="printDTR()">🖨️ Print DTR</button>
-                    <button class="time-btn btn-primary" onclick="saveAsPDF()">📄 Export to PDF</button>
-                    <button class="time-btn btn-secondary" onclick="downloadAsJPEG()">🖼️ Download as JPEG</button>
-                </div>
-            </div>
-            
-            <div class="button-group">
-                <div class="button-group-title">Data Management</div>
-                <button class="time-btn btn-danger" onclick="clearRecords()">🗑️ Clear All Records</button>
-            </div>
+            <button class="time-btn btn-primary" onclick="printDTR()">🖨️ Print DTR</button>
+            <button class="time-btn btn-primary" onclick="saveAsPDF()">📄 Export to PDF</button>
+            <button class="time-btn btn-secondary" onclick="downloadAsJPEG()">🖼️ Download as JPEG</button>
+            <button class="time-btn btn-danger" onclick="clearRecords()">🗑️ Clear All Records</button>
         </div>
     </div>
 
@@ -443,7 +573,7 @@
         const SATURDAY_TIMEOUT_DISPLAY = '4:00 PM (Sat. Enforced)';
         const MIN_WHOLE_DAY_HOURS = 6.8; // Generally 8 hours work minus 1 hour break = 7 hours. Using 6.8 for margin.
 
-        // --- Notification System (Improvement 2) ---
+        // --- Notification System ---
         function displayMessage(text, type = 'success', duration = 3000) {
             const area = document.getElementById('notification-area');
             const notification = document.createElement('div');
@@ -468,12 +598,18 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('employee-name-input').value = employeeName;
             document.getElementById('date-input').valueAsDate = new Date();
-            // Set default time entries for convenience
-            document.getElementById('time-in-hours').value = 8;
-            document.getElementById('time-in-minutes').value = '00';
-            document.getElementById('time-out-hours').value = 5;
-            document.getElementById('time-out-minutes').value = '00';
-            document.getElementById('time-out-ampm').value = 'PM';
+            
+            // If no records exist, create sample data
+            if (records.length === 0) {
+                records = [
+                    { date: '2025-09-25', timeIn: '08:57', timeOut: '18:30', status: null, employeeName: employeeName, remarks: '' },
+                    { date: '2025-09-24', timeIn: '09:45', timeOut: '18:30', status: null, employeeName: employeeName, remarks: '' },
+                    { date: '2025-09-23', timeIn: '09:45', timeOut: '18:10', status: null, employeeName: employeeName, remarks: '' },
+                    { date: '2025-09-22', timeIn: '09:08', timeOut: '18:20', status: null, employeeName: employeeName, remarks: '' },
+                    { date: '2025-09-21', timeIn: null, timeOut: null, status: STATUS_TYPES.DAYOFF, employeeName: employeeName, remarks: '' }
+                ];
+                localStorage.setItem('dtrRecords', JSON.stringify(records));
+            }
 
             updateTable();
             updateSummary();
@@ -575,7 +711,7 @@
             let timeOut24 = record.timeOut;
             let displayTimeOut = formatTime(timeOut24);
             
-            // --- Saturday 4:00 PM Enforced Timeout (Improvement 1) ---
+            // --- Saturday 4:00 PM Enforced Timeout ---
             if (dayOfWeek === 6 && timeIn24) {
                 // If it's Saturday and they clocked in, enforce 4:00 PM
                 timeOut24 = SATURDAY_TIMEOUT_24HR;
@@ -691,8 +827,6 @@
             if (record) {
                 record.remarks = remarks;
                 localStorage.setItem('dtrRecords', JSON.stringify(records));
-                // Optional: Re-render the table to update the print-only span
-                // updateTable(); 
                 displayMessage('Remarks saved!', 'success', 1500);
             }
         }
@@ -864,7 +998,7 @@
                 record = { date: dateInput, timeIn: null, timeOut: timeOut, status: null, employeeName: employeeName, remarks: '' };
                 records.push(record);
             } else {
-                // --- Time Order Check (Improvement 2) ---
+                // --- Time Order Check ---
                 if (record.timeIn && timeOut <= record.timeIn) {
                     displayMessage('🛑 Time Out must be AFTER Time In.', 'error');
                     return;
