@@ -379,6 +379,36 @@
             color: #333; 
         }
         
+        /* Operational Hours Display */
+        .operational-hours {
+            background-color: #e8f4fd;
+            border: 1px solid #b8daff;
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .operational-hours h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+            color: #0c5cb3;
+        }
+        .operational-hours p {
+            margin: 0;
+            color: #0c5cb3;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
         /* Print Styles */
         @media print {
             body { 
@@ -458,15 +488,20 @@
     <div class="container">
         <h1>DAILY TIME RECORD (DTR) Tracker</h1>
         
+        <div class="operational-hours no-print">
+            <h3>Operational Hours</h3>
+            <p>Monday to Friday: 9:00 AM to 6:00 PM | Saturday: 9:00 AM to 4:00 PM</p>
+        </div>
+        
         <div class="employee-info-section no-print">
             <div class="info-group">
                 <label for="employee-name-input">Employee Name:</label>
-                <input type="text" id="employee-name-input" class="name-input" placeholder="Enter your full name" value="DEAN VICTOR MONTALVO">
+                <input type="text" id="employee-name-input" class="name-input" placeholder="Enter your full name">
                 <button class="save-btn" onclick="saveEmployeeInfo()">Save Name</button>
             </div>
             <div class="info-group">
                 <label for="date-input">Select Date:</label>
-                <input type="date" id="date-input" class="date-input" value="2025-09-30">
+                <input type="date" id="date-input" class="date-input" onchange="updateTimeSuggestions()">
             </div>
         </div>
 
@@ -477,7 +512,7 @@
                 <h4>Time In</h4>
                 <div class="time-entry-row">
                     <div class="time-input-container">
-                        <input type="number" min="1" max="12" class="time-number" id="time-in-hours" placeholder="HH" value="8">
+                        <input type="number" min="1" max="12" class="time-number" id="time-in-hours" placeholder="HH" value="9">
                         <span class="time-separator">:</span>
                         <input type="number" min="0" max="59" class="time-number" id="time-in-minutes" placeholder="MM" value="0">
                         <select class="ampm-select" id="time-in-ampm">
@@ -493,7 +528,7 @@
                 <h4>Time Out</h4>
                 <div class="time-entry-row">
                     <div class="time-input-container">
-                        <input type="number" min="1" max="12" class="time-number" id="time-out-hours" placeholder="HH" value="5">
+                        <input type="number" min="1" max="12" class="time-number" id="time-out-hours" placeholder="HH" value="6">
                         <span class="time-separator">:</span>
                         <input type="number" min="0" max="59" class="time-number" id="time-out-minutes" placeholder="MM" value="0">
                         <select class="ampm-select" id="time-out-ampm">
@@ -533,6 +568,10 @@
             </tbody>
         </table>
         
+        <div id="empty-state" class="empty-state">
+            <p>No records yet. Start by entering your employee name and recording your first time entry.</p>
+        </div>
+        
         <div class="summary">
             <h3>Summary of the Period</h3>
             <p><strong>Total Days Recorded:</strong> <span id="total-days">0</span></p>
@@ -555,9 +594,9 @@
     </div>
 
     <script>
-        // Initialize variables
-        let records = JSON.parse(localStorage.getItem('dtrRecords')) || [];
-        let employeeName = localStorage.getItem('employeeName') || '';
+        // Initialize variables - completely clean
+        let records = [];
+        let employeeName = '';
 
         // Constants
         const STATUS_TYPES = {
@@ -568,10 +607,14 @@
             WHOLEDAY: 'wholeday',
             HALFDAY: 'halfday'
         };
-        // 16:00 is 4:00 PM in 24-hour format
-        const SATURDAY_TIMEOUT_24HR = '16:00'; 
-        const SATURDAY_TIMEOUT_DISPLAY = '4:00 PM (Sat. Enforced)';
-        const MIN_WHOLE_DAY_HOURS = 6.8; // Generally 8 hours work minus 1 hour break = 7 hours. Using 6.8 for margin.
+        
+        // Operational hours
+        const WEEKDAY_TIME_IN = '09:00'; // 9:00 AM
+        const WEEKDAY_TIME_OUT = '18:00'; // 6:00 PM
+        const SATURDAY_TIME_OUT = '16:00'; // 4:00 PM
+        
+        // Fixed threshold to properly recognize Saturday as Whole Day
+        const MIN_WHOLE_DAY_HOURS = 5.8;
 
         // --- Notification System ---
         function displayMessage(text, type = 'success', duration = 3000) {
@@ -596,29 +639,60 @@
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('employee-name-input').value = employeeName;
+            // Try to load existing data, but don't create sample data
+            const storedRecords = localStorage.getItem('dtrRecords');
+            const storedName = localStorage.getItem('employeeName');
+            
+            if (storedRecords) {
+                records = JSON.parse(storedRecords);
+            }
+            
+            if (storedName) {
+                employeeName = storedName;
+                document.getElementById('employee-name-input').value = employeeName;
+            }
+            
+            // Set today's date as default
             document.getElementById('date-input').valueAsDate = new Date();
             
-            // If no records exist, create sample data
-            if (records.length === 0) {
-                records = [
-                    { date: '2025-09-25', timeIn: '08:57', timeOut: '18:30', status: null, employeeName: employeeName, remarks: '' },
-                    { date: '2025-09-24', timeIn: '09:45', timeOut: '18:30', status: null, employeeName: employeeName, remarks: '' },
-                    { date: '2025-09-23', timeIn: '09:45', timeOut: '18:10', status: null, employeeName: employeeName, remarks: '' },
-                    { date: '2025-09-22', timeIn: '09:08', timeOut: '18:20', status: null, employeeName: employeeName, remarks: '' },
-                    { date: '2025-09-21', timeIn: null, timeOut: null, status: STATUS_TYPES.DAYOFF, employeeName: employeeName, remarks: '' }
-                ];
-                localStorage.setItem('dtrRecords', JSON.stringify(records));
-            }
-
             updateTable();
             updateSummary();
             updateEmployeeNameDisplay();
+            updateTimeSuggestions();
         });
+
+        // Update time suggestions based on selected date
+        function updateTimeSuggestions() {
+            const dateInput = document.getElementById('date-input').value;
+            if (!dateInput) return;
+            
+            const date = new Date(dateInput.replace(/-/g, '/'));
+            const dayOfWeek = date.getDay(); // 0 is Sunday, 6 is Saturday
+            
+            // Set default time in to 9:00 AM
+            document.getElementById('time-in-hours').value = 9;
+            document.getElementById('time-in-minutes').value = 0;
+            document.getElementById('time-in-ampm').value = 'AM';
+            
+            // Set default time out based on day of week
+            if (dayOfWeek === 6) { // Saturday
+                document.getElementById('time-out-hours').value = 4;
+                document.getElementById('time-out-minutes').value = 0;
+                document.getElementById('time-out-ampm').value = 'PM';
+            } else { // Weekdays (Monday to Friday)
+                document.getElementById('time-out-hours').value = 6;
+                document.getElementById('time-out-minutes').value = 0;
+                document.getElementById('time-out-ampm').value = 'PM';
+            }
+        }
 
         function updateEmployeeNameDisplay() {
             const displayElement = document.getElementById('printed-employee-name');
-            displayElement.textContent = `Employee: ${employeeName}`;
+            if (employeeName) {
+                displayElement.textContent = `Employee: ${employeeName}`;
+            } else {
+                displayElement.textContent = '';
+            }
         }
 
         // Helper function to validate and get 24-hour time
@@ -694,7 +768,7 @@
             return totalMinutes / 60;
         }
 
-        // Function to calculate hours worked with Saturday rule
+        // Function to calculate hours worked
         function calculateHours(record) {
             const status = record.status;
             if (status === STATUS_TYPES.HOLIDAY) return "Holiday";
@@ -711,21 +785,28 @@
             let timeOut24 = record.timeOut;
             let displayTimeOut = formatTime(timeOut24);
             
-            // --- Saturday 4:00 PM Enforced Timeout ---
-            if (dayOfWeek === 6 && timeIn24) {
-                // If it's Saturday and they clocked in, enforce 4:00 PM
-                timeOut24 = SATURDAY_TIMEOUT_24HR;
-                displayTimeOut = SATURDAY_TIMEOUT_DISPLAY;
+            // Check if times are within operational hours
+            let operationalNote = '';
+            if (dayOfWeek === 6) { // Saturday
+                if (timeOut24 && timeOut24 > SATURDAY_TIME_OUT) {
+                    operationalNote = ' (Beyond 4:00 PM)';
+                }
+            } else { // Weekday
+                if (timeIn24 && timeIn24 < WEEKDAY_TIME_IN) {
+                    operationalNote = ' (Before 9:00 AM)';
+                }
+                if (timeOut24 && timeOut24 > WEEKDAY_TIME_OUT) {
+                    operationalNote = ' (Beyond 6:00 PM)';
+                }
             }
-            // --------------------------------------------------------
-
+            
             if (!timeIn24 || !timeOut24) return 0;
             
             const totalHours = calculateHoursWithBreak(timeIn24, timeOut24);
             
             return {
                 hours: totalHours.toFixed(2),
-                timeOutDisplay: displayTimeOut
+                timeOutDisplay: displayTimeOut + operationalNote
             };
         }
 
@@ -752,72 +833,82 @@
         // Function to update the table
         function updateTable() {
             const tbody = document.getElementById('dtr-body');
-            tbody.innerHTML = '';
+            const emptyState = document.getElementById('empty-state');
             
-            // Sort records by date (newest first)
-            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            // Show/hide empty state
+            if (records.length === 0) {
+                emptyState.style.display = 'block';
+                tbody.innerHTML = '';
+            } else {
+                emptyState.style.display = 'none';
+                tbody.innerHTML = '';
+                
+                // Sort records by date (newest first)
+                records.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                records.forEach(record => {
+                    const row = document.createElement('tr');
+                    const dayOfWeek = getDayOfWeek(record.date);
+                    
+                    let hoursResult = { hours: '-', timeOutDisplay: formatTime(record.timeOut) };
+                    let currentStatus = getStatus(record);
+                    
+                    if (record.timeIn || record.timeOut) {
+                        const calculated = calculateHours(record);
+                        if (typeof calculated === 'object') {
+                            hoursResult = calculated;
+                        } else {
+                            hoursResult = { hours: calculated, timeOutDisplay: formatTime(record.timeOut) };
+                        }
+                    }
+
+                    // Auto-update status based on hours worked and apply row class
+                    if (typeof hoursResult.hours === 'string' && hoursResult.hours !== '-') {
+                        // It's a calculation result, not a fixed status string
+                        const hoursWorked = parseFloat(hoursResult.hours);
+                        if (hoursWorked >= MIN_WHOLE_DAY_HOURS) {
+                            record.status = STATUS_TYPES.WHOLEDAY;
+                        } else if (hoursWorked > 0) {
+                            record.status = STATUS_TYPES.HALFDAY;
+                        }
+                        currentStatus = getStatus(record); // Recalculate based on new status
+                    } else if (record.timeIn && record.timeOut && !record.status) {
+                        // Check for Half Day/Whole Day if no status was explicitly set
+                        const hoursWorked = calculateHoursWithBreak(record.timeIn, record.timeOut);
+                        if (hoursWorked >= MIN_WHOLE_DAY_HOURS) record.status = STATUS_TYPES.WHOLEDAY;
+                        else if (hoursWorked > 0) record.status = STATUS_TYPES.HALFDAY;
+                        currentStatus = getStatus(record);
+                    }
+
+                    // Apply appropriate class based on final status
+                    row.className = ''; // Reset class list
+                    if (record.status === STATUS_TYPES.HOLIDAY) row.classList.add('holiday-row');
+                    else if (record.status === STATUS_TYPES.ABSENT) row.classList.add('absent-row');
+                    else if (record.status === STATUS_TYPES.LEAVE) row.classList.add('leave-row');
+                    else if (record.status === STATUS_TYPES.DAYOFF) row.classList.add('dayoff-row');
+                    else if (record.status === STATUS_TYPES.WHOLEDAY) row.classList.add('wholeday-row');
+                    else if (record.status === STATUS_TYPES.HALFDAY) row.classList.add('halfday-row');
+
+                    row.innerHTML = `
+                        <td>${formatDate(record.date)}</td>
+                        <td>${dayOfWeek}</td>
+                        <td>${formatTime(record.timeIn)}</td>
+                        <td>${hoursResult.timeOutDisplay}</td>
+                        <td>${hoursResult.hours}</td>
+                        <td>${currentStatus}</td>
+                        <td class="remarks-cell">
+                            <input type="text" class="remarks-input no-print" 
+                                    value="${record.remarks || ''}" 
+                                    onchange="updateRemarks('${record.date}', this.value)"
+                                    placeholder="Enter remarks">
+                            <span class="print-only">${record.remarks || '-'}</span>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
             
-            records.forEach(record => {
-                const row = document.createElement('tr');
-                const dayOfWeek = getDayOfWeek(record.date);
-                
-                let hoursResult = { hours: '-', timeOutDisplay: formatTime(record.timeOut) };
-                let currentStatus = getStatus(record);
-                
-                if (record.timeIn || record.timeOut) {
-                    const calculated = calculateHours(record);
-                    if (typeof calculated === 'object') {
-                        hoursResult = calculated;
-                    } else {
-                        hoursResult = { hours: calculated, timeOutDisplay: formatTime(record.timeOut) };
-                    }
-                }
-
-                // Auto-update status based on hours worked and apply row class
-                if (typeof hoursResult.hours === 'string' && hoursResult.hours !== '-') {
-                    // It's a calculation result, not a fixed status string
-                    const hoursWorked = parseFloat(hoursResult.hours);
-                    if (hoursWorked >= MIN_WHOLE_DAY_HOURS) {
-                        record.status = STATUS_TYPES.WHOLEDAY;
-                    } else if (hoursWorked > 0) {
-                        record.status = STATUS_TYPES.HALFDAY;
-                    }
-                    currentStatus = getStatus(record); // Recalculate based on new status
-                } else if (record.timeIn && record.timeOut && !record.status) {
-                    // Check for Half Day/Whole Day if no status was explicitly set
-                    const hoursWorked = calculateHoursWithBreak(record.timeIn, record.timeOut);
-                    if (hoursWorked >= MIN_WHOLE_DAY_HOURS) record.status = STATUS_TYPES.WHOLEDAY;
-                    else if (hoursWorked > 0) record.status = STATUS_TYPES.HALFDAY;
-                    currentStatus = getStatus(record);
-                }
-
-                // Apply appropriate class based on final status
-                row.className = ''; // Reset class list
-                if (record.status === STATUS_TYPES.HOLIDAY) row.classList.add('holiday-row');
-                else if (record.status === STATUS_TYPES.ABSENT) row.classList.add('absent-row');
-                else if (record.status === STATUS_TYPES.LEAVE) row.classList.add('leave-row');
-                else if (record.status === STATUS_TYPES.DAYOFF) row.classList.add('dayoff-row');
-                else if (record.status === STATUS_TYPES.WHOLEDAY) row.classList.add('wholeday-row');
-                else if (record.status === STATUS_TYPES.HALFDAY) row.classList.add('halfday-row');
-
-                row.innerHTML = `
-                    <td>${formatDate(record.date)}</td>
-                    <td>${dayOfWeek}</td>
-                    <td>${formatTime(record.timeIn)}</td>
-                    <td>${hoursResult.timeOutDisplay}</td>
-                    <td>${hoursResult.hours}</td>
-                    <td>${currentStatus}</td>
-                    <td class="remarks-cell">
-                        <input type="text" class="remarks-input no-print" 
-                                value="${record.remarks || ''}" 
-                                onchange="updateRemarks('${record.date}', this.value)"
-                                placeholder="Enter remarks">
-                        <span class="print-only">${record.remarks || '-'}</span>
-                    </td>
-                `;
-                
-                tbody.appendChild(row);
-            });
             localStorage.setItem('dtrRecords', JSON.stringify(records));
         }
 
@@ -1034,6 +1125,11 @@
                 return;
             }
             
+            if (records.length === 0) {
+                displayMessage('No records to export.', 'warning');
+                return;
+            }
+            
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape
             
@@ -1115,6 +1211,11 @@
                 return;
             }
             
+            if (records.length === 0) {
+                displayMessage('No records to export.', 'warning');
+                return;
+            }
+            
             // Prepare for screenshot
             document.getElementById('printed-employee-name').style.display = 'block';
             const elementsToHide = document.querySelectorAll('.no-print');
@@ -1135,6 +1236,11 @@
 
         // Clear all records
         function clearRecords() {
+            if (records.length === 0) {
+                displayMessage('No records to clear.', 'warning');
+                return;
+            }
+            
             if (confirm('⚠️ Are you sure you want to clear ALL DTR records? This action cannot be undone.')) {
                 records = [];
                 localStorage.setItem('dtrRecords', JSON.stringify(records));
