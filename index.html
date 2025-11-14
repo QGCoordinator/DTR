@@ -339,6 +339,12 @@
         .btn-secondary:hover { 
             background-color: #7f8c8d; 
         }
+        .btn-warning { 
+            background-color: #f39c12; 
+        }
+        .btn-warning:hover { 
+            background-color: #e67e22; 
+        }
         
         /* Employee Name Display */
         .employee-name-display {
@@ -601,6 +607,7 @@
             <button class="time-btn btn-primary" onclick="saveAsPDF()">📄 Export to PDF</button>
             <button class="time-btn btn-secondary" onclick="downloadAsJPEG()">🖼️ Download as JPEG</button>
             <button class="time-btn btn-secondary" onclick="resetRemarks()">🗑️ Reset All Remarks</button>
+            <button class="time-btn btn-warning" onclick="resetAllStatus()">🔄 Reset All Status</button>
             <button class="time-btn btn-danger" onclick="clearRecords()">🗑️ Clear All Records</button>
         </div>
     </div>
@@ -1267,6 +1274,25 @@
                 localStorage.setItem('dtrRecords', JSON.stringify(records));
                 updateTable();
                 displayMessage('🗑️ All remarks reset!', 'success', 3000);
+            }
+        }
+
+        // Reset all status
+        function resetAllStatus() {
+            if (records.length === 0) {
+                displayMessage('No records to reset status for.', 'warning');
+                return;
+            }
+            
+            if (confirm('⚠️ Are you sure you want to reset ALL statuses? This will clear all status markers and recalculate based on time entries.')) {
+                records.forEach(record => {
+                    // Reset status to null, allowing automatic recalculation based on time entries
+                    record.status = null;
+                });
+                localStorage.setItem('dtrRecords', JSON.stringify(records));
+                updateTable();
+                updateSummary();
+                displayMessage('🔄 All statuses reset!', 'success', 3000);
             }
         }
 
