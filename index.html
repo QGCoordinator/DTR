@@ -345,6 +345,12 @@
         .btn-warning:hover { 
             background-color: #e67e22; 
         }
+        .btn-purple { 
+            background-color: #8e44ad; 
+        }
+        .btn-purple:hover { 
+            background-color: #7d3c98; 
+        }
         
         /* Employee Name Display */
         .employee-name-display {
@@ -517,6 +523,7 @@
             <div class="info-group">
                 <label for="date-input">Select Date:</label>
                 <input type="date" id="date-input" class="date-input" onchange="updateTimeSuggestions()">
+                <button class="time-btn btn-purple" onclick="clearDateData()" style="margin-top: 10px; width: 100%;">🗑️ Clear Data of This Date</button>
             </div>
         </div>
 
@@ -1126,6 +1133,30 @@
             updateTable();
             updateSummary();
             displayMessage(`Time Out recorded at ${formatTime(timeOut)} for ${formatDate(dateInput)}.`, 'success');
+        }
+
+        // Clear data for selected date
+        function clearDateData() {
+            const dateInput = document.getElementById('date-input').value;
+            if (!dateInput) {
+                displayMessage('⚠️ Please select a date first.', 'warning');
+                return;
+            }
+            
+            const recordIndex = records.findIndex(r => r.date === dateInput);
+            
+            if (recordIndex === -1) {
+                displayMessage(`No data found for ${formatDate(dateInput)}.`, 'warning');
+                return;
+            }
+            
+            if (confirm(`⚠️ Are you sure you want to clear all data for ${formatDate(dateInput)}? This action cannot be undone.`)) {
+                records.splice(recordIndex, 1);
+                localStorage.setItem('dtrRecords', JSON.stringify(records));
+                updateTable();
+                updateSummary();
+                displayMessage(`🗑️ Data cleared for ${formatDate(dateInput)}.`, 'success', 3000);
+            }
         }
 
         // Print function
