@@ -219,6 +219,12 @@
         .btn-dayoff:hover { 
             background-color: #2c3e50; 
         }
+        .btn-typhoon { 
+            background-color: #1abc9c; 
+        }
+        .btn-typhoon:hover { 
+            background-color: #16a085; 
+        }
         
         /* Table Styles */
         table {
@@ -263,6 +269,9 @@
         }
         .halfday-row { 
             background-color: #fff8e1 !important; 
+        }
+        .typhoon-row { 
+            background-color: #d1ecf1 !important; 
         }
         
         /* Remarks Input in Table */
@@ -445,7 +454,7 @@
                 print-color-adjust: exact; 
             }
             /* Force row colors for print */
-            .holiday-row, .absent-row, .leave-row, .dayoff-row, .wholeday-row, .halfday-row {
+            .holiday-row, .absent-row, .leave-row, .dayoff-row, .wholeday-row, .halfday-row, .typhoon-row {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -547,6 +556,7 @@
                     <button class="time-btn btn-leave" onclick="markStatus('leave')">Leave</button>
                     <button class="time-btn btn-dayoff" onclick="markStatus('dayoff')">Day Off</button>
                     <button class="time-btn btn-absent" onclick="markStatus('absent')">Absent</button>
+                    <button class="time-btn btn-typhoon" onclick="markStatus('typhoon')">No Work (Typhoon)</button>
                 </div>
             </div>
         </div>
@@ -583,12 +593,14 @@
             <p><strong>Leave Days:</strong> <span id="total-leave">0</span></p>
             <p><strong>Absent Days:</strong> <span id="total-absent">0</span></p>
             <p><strong>Days Off:</strong> <span id="total-dayoff">0</span></p>
+            <p><strong>No Work (Typhoon):</strong> <span id="total-typhoon">0</span></p>
         </div>
         
         <div class="action-buttons no-print">
             <button class="time-btn btn-primary" onclick="printDTR()">🖨️ Print DTR</button>
             <button class="time-btn btn-primary" onclick="saveAsPDF()">📄 Export to PDF</button>
             <button class="time-btn btn-secondary" onclick="downloadAsJPEG()">🖼️ Download as JPEG</button>
+            <button class="time-btn btn-secondary" onclick="resetRemarks()">🗑️ Reset All Remarks</button>
             <button class="time-btn btn-danger" onclick="clearRecords()">🗑️ Clear All Records</button>
         </div>
     </div>
@@ -605,7 +617,8 @@
             LEAVE: 'leave',
             DAYOFF: 'dayoff',
             WHOLEDAY: 'wholeday',
-            HALFDAY: 'halfday'
+            HALFDAY: 'halfday',
+            TYPHOON: 'typhoon'
         };
         
         // Operational hours
@@ -775,6 +788,7 @@
             if (status === STATUS_TYPES.ABSENT) return "Absent";
             if (status === STATUS_TYPES.LEAVE) return "Leave";
             if (status === STATUS_TYPES.DAYOFF) return "Day Off";
+            if (status === STATUS_TYPES.TYPHOON) return "No Work (Typhoon)";
             
             if (!record.timeIn && !record.timeOut) return 0;
 
@@ -816,6 +830,7 @@
             if (record.status === STATUS_TYPES.ABSENT) return 'Absent';
             if (record.status === STATUS_TYPES.LEAVE) return 'Leave';
             if (record.status === STATUS_TYPES.DAYOFF) return 'Day Off';
+            if (record.status === STATUS_TYPES.TYPHOON) return 'No Work (Typhoon)';
             if (record.status === STATUS_TYPES.WHOLEDAY) return 'Whole Day';
             if (record.status === STATUS_TYPES.HALFDAY) return 'Half Day';
             
@@ -888,6 +903,7 @@
                     else if (record.status === STATUS_TYPES.DAYOFF) row.classList.add('dayoff-row');
                     else if (record.status === STATUS_TYPES.WHOLEDAY) row.classList.add('wholeday-row');
                     else if (record.status === STATUS_TYPES.HALFDAY) row.classList.add('halfday-row');
+                    else if (record.status === STATUS_TYPES.TYPHOON) row.classList.add('typhoon-row');
 
                     row.innerHTML = `
                         <td>${formatDate(record.date)}</td>
@@ -930,6 +946,7 @@
             const holidayCounter = records.filter(r => r.status === STATUS_TYPES.HOLIDAY).length;
             const leaveCounter = records.filter(r => r.status === STATUS_TYPES.LEAVE).length;
             const dayoffCounter = records.filter(r => r.status === STATUS_TYPES.DAYOFF).length;
+            const typhoonCounter = records.filter(r => r.status === STATUS_TYPES.TYPHOON).length;
             
             // Count Whole Day/Half Day/Absent based on the status determined during updateTable
             let totalHours = 0;
@@ -982,6 +999,7 @@
             document.getElementById('total-absent').textContent = absentCounter;
             document.getElementById('total-wholeday').textContent = wholedayCounter;
             document.getElementById('total-halfday').textContent = halfdayCounter;
+            document.getElementById('total-typhoon').textContent = typhoonCounter;
         }
 
         // Save employee info
@@ -996,7 +1014,7 @@
             displayMessage('Employee name saved successfully!', 'success');
         }
 
-        // Mark status (holiday, absent, leave, day off)
+        // Mark status (holiday, absent, leave, day off, typhoon)
         function markStatus(status) {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
@@ -1186,7 +1204,8 @@
                 ['Holidays:', document.getElementById('total-holidays').textContent],
                 ['Leave Days:', document.getElementById('total-leave').textContent],
                 ['Absent Days:', document.getElementById('total-absent').textContent],
-                ['Days Off:', document.getElementById('total-dayoff').textContent]
+                ['Days Off:', document.getElementById('total-dayoff').textContent],
+                ['No Work (Typhoon):', document.getElementById('total-typhoon').textContent]
             ];
 
             pdf.autoTable({
@@ -1232,6 +1251,23 @@
                 link.click();
                 displayMessage('JPEG downloaded successfully!', 'success');
             });
+        }
+
+        // Reset all remarks
+        function resetRemarks() {
+            if (records.length === 0) {
+                displayMessage('No records to reset remarks for.', 'warning');
+                return;
+            }
+            
+            if (confirm('⚠️ Are you sure you want to reset ALL remarks? This action cannot be undone.')) {
+                records.forEach(record => {
+                    record.remarks = '';
+                });
+                localStorage.setItem('dtrRecords', JSON.stringify(records));
+                updateTable();
+                displayMessage('🗑️ All remarks reset!', 'success', 3000);
+            }
         }
 
         // Clear all records
