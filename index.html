@@ -233,11 +233,19 @@
             margin-bottom: 25px;
             font-size: 14px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow-x: auto;
+            display: block;
+        }
+        @media (min-width: 768px) {
+            table {
+                display: table;
+            }
         }
         th, td {
             border: 1px solid #ddd;
             padding: 12px;
             text-align: center;
+            white-space: nowrap;
         }
         th {
             background-color: #3498db;
@@ -284,6 +292,11 @@
         }
         .remarks-cell {
             min-width: 150px;
+        }
+        
+        /* Print-only elements */
+        .print-only {
+            display: none;
         }
         
         /* Summary Section */
@@ -424,41 +437,82 @@
             text-align: center;
             padding: 40px 20px;
             color: #7f8c8d;
+            display: none;
         }
         .empty-state p {
             font-size: 16px;
             margin-bottom: 20px;
         }
         
-        /* Print Styles */
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Print Styles - FIXED */
         @media print {
             body { 
                 padding: 0; 
                 font-size: 12px; 
                 background: white; 
+                margin: 0;
             }
             .container { 
                 padding: 10px; 
                 box-shadow: none; 
                 max-width: 100%; 
+                margin: 0;
             }
             .no-print { 
                 display: none !important; 
             }
+            .print-only {
+                display: inline !important;
+            }
             .employee-name-display { 
                 display: block !important; 
                 margin: 0 0 10px; 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
             h1 { 
                 font-size: 22px; 
                 margin: 5px 0 15px; 
             }
             table { 
-                font-size: 11px; 
+                font-size: 11px;
+                display: table;
+                width: 100%;
+                overflow: visible !important;
             }
             th, td { 
                 padding: 8px; 
                 border-color: #aaa; 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
             .summary { 
                 background-color: #ecf0f1 !important; 
@@ -466,14 +520,26 @@
                 print-color-adjust: exact; 
             }
             /* Force row colors for print */
-            .holiday-row, .absent-row, .leave-row, .dayoff-row, .wholeday-row, .halfday-row, .typhoon-row {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+            .holiday-row, .absent-row, .leave-row, .dayoff-row, 
+            .wholeday-row, .halfday-row, .typhoon-row {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                background-color: inherit !important;
+            }
+            /* Hide input elements in print */
+            .remarks-input {
+                display: none;
+            }
+            .print-only {
+                display: block !important;
             }
         }
         
-        /* Responsive adjustments */
+        /* Responsive adjustments - IMPROVED */
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
             .container {
                 padding: 15px;
             }
@@ -486,17 +552,38 @@
             }
             .time-entry-row {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: stretch;
                 gap: 10px;
+            }
+            .time-input-container {
+                justify-content: center;
             }
             .status-buttons button {
                 min-width: calc(50% - 4px);
+                padding: 10px 6px;
             }
             .action-buttons button {
                 min-width: 100%;
+                padding: 12px;
             }
             .summary p {
                 min-width: 100%;
+            }
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            th, td {
+                min-width: 100px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .status-buttons button {
+                min-width: 100%;
+            }
+            .action-buttons {
+                gap: 8px;
             }
         }
     </style>
@@ -506,6 +593,11 @@
 </head>
 <body>
     <div id="notification-area"></div>
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div id="loading-text">Processing...</div>
+    </div>
+    
     <div class="container">
         <h1>DAILY TIME RECORD (DTR) Tracker</h1>
         
@@ -641,8 +733,22 @@
         const SATURDAY_TIME_OUT = '16:00'; // 4:00 PM
         
         // Fixed threshold to properly recognize Saturday as Whole Day
-        const MIN_WHOLE_DAY_HOURS = 5.8;
-
+        const MIN_WHOLE_DAY_HOURS_WEEKDAY = 5.8;
+        const MIN_WHOLE_DAY_HOURS_SATURDAY = 4.8; // Adjusted for Saturday shorter hours
+        
+        // --- Loading Overlay Functions ---
+        function showLoading(text = 'Processing...') {
+            const overlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            loadingText.textContent = text;
+            overlay.style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'none';
+        }
+        
         // --- Notification System ---
         function displayMessage(text, type = 'success', duration = 3000) {
             const area = document.getElementById('notification-area');
@@ -671,7 +777,12 @@
             const storedName = localStorage.getItem('employeeName');
             
             if (storedRecords) {
-                records = JSON.parse(storedRecords);
+                try {
+                    records = JSON.parse(storedRecords);
+                } catch (e) {
+                    console.error('Error parsing stored records:', e);
+                    records = [];
+                }
             }
             
             if (storedName) {
@@ -680,7 +791,9 @@
             }
             
             // Set today's date as default
-            document.getElementById('date-input').valueAsDate = new Date();
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('date-input').value = formattedDate;
             
             updateTable();
             updateSummary();
@@ -693,7 +806,7 @@
             const dateInput = document.getElementById('date-input').value;
             if (!dateInput) return;
             
-            const date = new Date(dateInput.replace(/-/g, '/'));
+            const date = new Date(dateInput);
             const dayOfWeek = date.getDay(); // 0 is Sunday, 6 is Saturday
             
             // Set default time in to 9:00 AM
@@ -717,8 +830,10 @@
             const displayElement = document.getElementById('printed-employee-name');
             if (employeeName) {
                 displayElement.textContent = `Employee: ${employeeName}`;
+                displayElement.style.display = 'block';
             } else {
                 displayElement.textContent = '';
+                displayElement.style.display = 'none';
             }
         }
 
@@ -749,22 +864,31 @@
             return `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         }
 
-        // Function to format date
+        // Function to format date - FIXED for cross-browser compatibility
         function formatDate(dateString) {
-            const date = new Date(dateString.replace(/-/g, '/')); // Handle Safari date parsing
-            const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-            return date.toLocaleDateString('en-US', options);
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                // Fallback for invalid dates
+                return dateString;
+            }
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${month}/${day}/${year}`;
         }
         
         // Function to get Day of Week
         function getDayOfWeek(dateString) {
-            const date = new Date(dateString.replace(/-/g, '/'));
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
             return date.toLocaleDateString('en-US', { weekday: 'short' });
         }
 
         // Function to format time as HH:MM AM/PM
         function formatTime(timeString) {
-            if (!timeString) return '-';
+            if (!timeString || timeString === 'null') return '-';
             const [hours, minutes] = timeString.split(':').map(Number);
             const date = new Date();
             date.setHours(hours);
@@ -774,7 +898,7 @@
         
         // Core calculation function
         function calculateHoursWithBreak(timeIn24, timeOut24) {
-            if (!timeIn24 || !timeOut24) return 0;
+            if (!timeIn24 || !timeOut24 || timeIn24 === 'null' || timeOut24 === 'null') return 0;
             
             const toMinutes = (time) => {
                 const [hours, minutes] = time.split(':').map(Number);
@@ -784,7 +908,7 @@
             const timeIn = toMinutes(timeIn24);
             const timeOut = toMinutes(timeOut24);
 
-            // Handle overnight shifts (though typical DTRs are not designed for this)
+            // Handle overnight shifts
             let totalMinutes = (timeOut > timeIn ? timeOut - timeIn : (timeOut + 1440) - timeIn);
             
             // Subtract 60 minutes for break
@@ -806,7 +930,7 @@
             
             if (!record.timeIn && !record.timeOut) return 0;
 
-            const date = new Date(record.date.replace(/-/g, '/'));
+            const date = new Date(record.date);
             const dayOfWeek = date.getDay(); // 6 is Saturday
 
             let timeIn24 = record.timeIn;
@@ -854,7 +978,11 @@
             if (record.timeIn && record.timeOut) {
                 const result = calculateHours(record);
                 const hoursWorked = parseFloat(result.hours);
-                return hoursWorked >= MIN_WHOLE_DAY_HOURS ? 'Whole Day' : (hoursWorked > 0 ? 'Half Day' : 'Less than 1h');
+                const date = new Date(record.date);
+                const dayOfWeek = date.getDay();
+                const minHours = dayOfWeek === 6 ? MIN_WHOLE_DAY_HOURS_SATURDAY : MIN_WHOLE_DAY_HOURS_WEEKDAY;
+                
+                return hoursWorked >= minHours ? 'Whole Day' : (hoursWorked > 0 ? 'Half Day' : 'Less than 1h');
             }
             return '-';
         }
@@ -895,7 +1023,11 @@
                     if (typeof hoursResult.hours === 'string' && hoursResult.hours !== '-') {
                         // It's a calculation result, not a fixed status string
                         const hoursWorked = parseFloat(hoursResult.hours);
-                        if (hoursWorked >= MIN_WHOLE_DAY_HOURS) {
+                        const date = new Date(record.date);
+                        const dayOfWeek = date.getDay();
+                        const minHours = dayOfWeek === 6 ? MIN_WHOLE_DAY_HOURS_SATURDAY : MIN_WHOLE_DAY_HOURS_WEEKDAY;
+                        
+                        if (hoursWorked >= minHours) {
                             record.status = STATUS_TYPES.WHOLEDAY;
                         } else if (hoursWorked > 0) {
                             record.status = STATUS_TYPES.HALFDAY;
@@ -904,7 +1036,11 @@
                     } else if (record.timeIn && record.timeOut && !record.status) {
                         // Check for Half Day/Whole Day if no status was explicitly set
                         const hoursWorked = calculateHoursWithBreak(record.timeIn, record.timeOut);
-                        if (hoursWorked >= MIN_WHOLE_DAY_HOURS) record.status = STATUS_TYPES.WHOLEDAY;
+                        const date = new Date(record.date);
+                        const dayOfWeek = date.getDay();
+                        const minHours = dayOfWeek === 6 ? MIN_WHOLE_DAY_HOURS_SATURDAY : MIN_WHOLE_DAY_HOURS_WEEKDAY;
+                        
+                        if (hoursWorked >= minHours) record.status = STATUS_TYPES.WHOLEDAY;
                         else if (hoursWorked > 0) record.status = STATUS_TYPES.HALFDAY;
                         currentStatus = getStatus(record);
                     }
@@ -948,7 +1084,7 @@
             if (record) {
                 record.remarks = remarks;
                 localStorage.setItem('dtrRecords', JSON.stringify(records));
-                displayMessage('Remarks saved!', 'success', 1500);
+                displayMessage('✓ Remarks saved!', 'success', 1500);
             }
         }
 
@@ -972,11 +1108,17 @@
             records.forEach(record => {
                 if (record.status === STATUS_TYPES.WHOLEDAY) {
                     wholedayCounter++;
-                    totalHours += parseFloat(calculateHours(record).hours) || 0;
+                    const result = calculateHours(record);
+                    if (typeof result === 'object') {
+                        totalHours += parseFloat(result.hours) || 0;
+                    }
                     totalWorkingDays++;
                 } else if (record.status === STATUS_TYPES.HALFDAY) {
                     halfdayCounter++;
-                    totalHours += parseFloat(calculateHours(record).hours) || 0;
+                    const result = calculateHours(record);
+                    if (typeof result === 'object') {
+                        totalHours += parseFloat(result.hours) || 0;
+                    }
                     totalWorkingDays++;
                 } else if (record.status === STATUS_TYPES.ABSENT || (!record.timeIn && !record.timeOut && !record.status)) {
                     absentCounter++;
@@ -985,12 +1127,7 @@
                     const result = calculateHours(record);
                     if (typeof result === 'object' && result.hours !== '-') {
                         const hours = parseFloat(result.hours);
-                        if (hours >= MIN_WHOLE_DAY_HOURS) {
-                            wholedayCounter++;
-                            totalHours += hours;
-                            totalWorkingDays++;
-                        } else if (hours > 0) {
-                            halfdayCounter++;
+                        if (hours > 0) {
                             totalHours += hours;
                             totalWorkingDays++;
                         } else {
@@ -1025,7 +1162,7 @@
             }
             localStorage.setItem('employeeName', employeeName);
             updateEmployeeNameDisplay();
-            displayMessage('Employee name saved successfully!', 'success');
+            displayMessage('✓ Employee name saved!', 'success');
         }
 
         // Mark status (holiday, absent, leave, day off, typhoon)
@@ -1056,7 +1193,7 @@
             localStorage.setItem('dtrRecords', JSON.stringify(records));
             updateTable();
             updateSummary();
-            displayMessage(`Status marked as ${status.toUpperCase()} for ${formatDate(dateInput)}.`, 'success');
+            displayMessage(`✓ Status marked as ${status.toUpperCase()} for ${formatDate(dateInput)}.`, 'success');
         }
 
         // Record Time In
@@ -1090,7 +1227,7 @@
             localStorage.setItem('dtrRecords', JSON.stringify(records));
             updateTable();
             updateSummary();
-            displayMessage(`Time In recorded at ${formatTime(timeIn)} for ${formatDate(dateInput)}.`, 'success');
+            displayMessage(`✓ Time In recorded at ${formatTime(timeIn)} for ${formatDate(dateInput)}.`, 'success');
         }
 
         // Record Time Out
@@ -1117,7 +1254,7 @@
             }
 
             if (!record) {
-                displayMessage('No Time In found. Recording Time Out only (This will result in 0 hours unless Time In is added).', 'warning');
+                displayMessage('⚠️ No Time In found. Recording Time Out only.', 'warning');
                 record = { date: dateInput, timeIn: null, timeOut: timeOut, status: null, employeeName: employeeName, remarks: '' };
                 records.push(record);
             } else {
@@ -1132,7 +1269,7 @@
             localStorage.setItem('dtrRecords', JSON.stringify(records));
             updateTable();
             updateSummary();
-            displayMessage(`Time Out recorded at ${formatTime(timeOut)} for ${formatDate(dateInput)}.`, 'success');
+            displayMessage(`✓ Time Out recorded at ${formatTime(timeOut)} for ${formatDate(dateInput)}.`, 'success');
         }
 
         // Clear data for selected date
@@ -1159,22 +1296,33 @@
             }
         }
 
-        // Print function
+        // Print function - FIXED
         function printDTR() {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
                 return;
             }
-            // Temporarily show employee name for print
-            document.getElementById('printed-employee-name').style.display = 'block';
-            window.print();
-            // Restore hidden state after print dialog is closed (with a slight delay)
+            
+            if (records.length === 0) {
+                displayMessage('No records to print.', 'warning');
+                return;
+            }
+            
+            // Show employee name for print
+            updateEmployeeNameDisplay();
+            
+            // Trigger print
+            setTimeout(() => {
+                window.print();
+            }, 100);
+            
+            // Hide employee name after print (with delay for print dialog)
             setTimeout(() => {
                 document.getElementById('printed-employee-name').style.display = 'none';
-            }, 500);
+            }, 1000);
         }
 
-        // Export to PDF function (using jsPDF-Autotable for better quality)
+        // Export to PDF function
         function saveAsPDF() {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
@@ -1186,82 +1334,90 @@
                 return;
             }
             
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape
+            showLoading('Generating PDF...');
             
-            // Set up document properties
-            pdf.setFontSize(16);
-            pdf.text('DAILY TIME RECORD (DTR) Tracker', 148.5, 10, null, null, 'center');
-            
-            pdf.setFontSize(12);
-            pdf.text(`Employee: ${employeeName}`, 10, 18);
-            pdf.text(`Date Exported: ${new Date().toLocaleDateString()}`, 287, 18, null, null, 'right');
+            setTimeout(() => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape
+                    
+                    // Set up document properties
+                    pdf.setFontSize(16);
+                    pdf.text('DAILY TIME RECORD (DTR) Tracker', 148.5, 10, null, null, 'center');
+                    
+                    pdf.setFontSize(12);
+                    pdf.text(`Employee: ${employeeName}`, 10, 18);
+                    pdf.text(`Date Exported: ${new Date().toLocaleDateString()}`, 287, 18, null, null, 'right');
 
-            // Prepare table data
-            const head = [['Date', 'Day', 'Time In', 'Time Out', 'Total Hours', 'Status', 'Remarks']];
-            const body = records.map(record => {
-                const hoursResult = calculateHours(record);
-                const hours = typeof hoursResult === 'object' ? hoursResult.hours : hoursResult;
-                const timeOutDisplay = typeof hoursResult === 'object' ? hoursResult.timeOutDisplay : formatTime(record.timeOut);
-                
-                return [
-                    formatDate(record.date),
-                    getDayOfWeek(record.date),
-                    formatTime(record.timeIn),
-                    timeOutDisplay,
-                    hours,
-                    getStatus(record),
-                    record.remarks || '-'
-                ];
-            });
+                    // Prepare table data
+                    const head = [['Date', 'Day', 'Time In', 'Time Out', 'Total Hours', 'Status', 'Remarks']];
+                    const body = records.map(record => {
+                        const hoursResult = calculateHours(record);
+                        const hours = typeof hoursResult === 'object' ? hoursResult.hours : hoursResult;
+                        const timeOutDisplay = typeof hoursResult === 'object' ? hoursResult.timeOutDisplay : formatTime(record.timeOut);
+                        
+                        return [
+                            formatDate(record.date),
+                            getDayOfWeek(record.date),
+                            formatTime(record.timeIn),
+                            timeOutDisplay,
+                            hours,
+                            getStatus(record),
+                            record.remarks || '-'
+                        ];
+                    });
 
-            // Use autoTable plugin
-            pdf.autoTable({
-                startY: 25,
-                head: head,
-                body: body,
-                theme: 'striped',
-                headStyles: { fillColor: [52, 152, 219] },
-                alternateRowStyles: { fillColor: [242, 242, 242] },
-                styles: { fontSize: 10, cellPadding: 2, overflow: 'linebreak' },
-                columnStyles: {
-                    4: { cellWidth: 20 }, // Total Hours width
-                    5: { cellWidth: 20 }, // Status width
-                    6: { cellWidth: 40 }  // Remarks width
+                    // Use autoTable plugin
+                    pdf.autoTable({
+                        startY: 25,
+                        head: head,
+                        body: body,
+                        theme: 'striped',
+                        headStyles: { fillColor: [52, 152, 219] },
+                        alternateRowStyles: { fillColor: [242, 242, 242] },
+                        styles: { fontSize: 10, cellPadding: 2, overflow: 'linebreak' },
+                        columnStyles: {
+                            4: { cellWidth: 20 }, // Total Hours width
+                            5: { cellWidth: 20 }, // Status width
+                            6: { cellWidth: 40 }  // Remarks width
+                        }
+                    });
+
+                    // Add Summary below the table
+                    let finalY = pdf.autoTable.previous.finalY + 5;
+                    const summaryData = [
+                        ['Total Days Recorded:', document.getElementById('total-days').textContent],
+                        ['Total Hours Worked:', document.getElementById('total-hours').textContent + ' hours'],
+                        ['Average Hours per Working Day:', document.getElementById('avg-hours').textContent + ' hours'],
+                        ['Whole Days:', document.getElementById('total-wholeday').textContent],
+                        ['Half Days:', document.getElementById('total-halfday').textContent],
+                        ['Holidays:', document.getElementById('total-holidays').textContent],
+                        ['Leave Days:', document.getElementById('total-leave').textContent],
+                        ['Absent Days:', document.getElementById('total-absent').textContent],
+                        ['Days Off:', document.getElementById('total-dayoff').textContent],
+                        ['No Work (Typhoon):', document.getElementById('total-typhoon').textContent]
+                    ];
+
+                    pdf.autoTable({
+                        startY: finalY,
+                        body: summaryData,
+                        theme: 'plain',
+                        styles: { fontSize: 11, cellPadding: 1 },
+                        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 70 } }
+                    });
+                    
+                    pdf.save(`DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`);
+                    displayMessage('✓ PDF exported successfully!', 'success');
+                } catch (error) {
+                    console.error('PDF export error:', error);
+                    displayMessage('❌ Error exporting PDF', 'error');
+                } finally {
+                    hideLoading();
                 }
-            });
-
-            // Add Summary below the table
-            let finalY = pdf.autoTable.previous.finalY + 5;
-            const summaryData = [
-                ['Total Days Recorded:', document.getElementById('total-days').textContent],
-                ['Total Hours Worked:', document.getElementById('total-hours').textContent + ' hours'],
-                ['Average Hours per Working Day:', document.getElementById('avg-hours').textContent + ' hours'],
-                ['Whole Days:', document.getElementById('total-wholeday').textContent],
-                ['Half Days:', document.getElementById('total-halfday').textContent],
-                ['Holidays:', document.getElementById('total-holidays').textContent],
-                ['Leave Days:', document.getElementById('total-leave').textContent],
-                ['Absent Days:', document.getElementById('total-absent').textContent],
-                ['Days Off:', document.getElementById('total-dayoff').textContent],
-                ['No Work (Typhoon):', document.getElementById('total-typhoon').textContent]
-            ];
-
-            pdf.autoTable({
-                startY: finalY,
-                body: summaryData,
-                theme: 'plain',
-                styles: { fontSize: 11, cellPadding: 1 },
-                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 70 } },
-                didDrawPage: (data) => {
-                    finalY = data.cursor.y;
-                }
-            });
-            
-            pdf.save(`DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`);
-            displayMessage('PDF exported successfully!', 'success');
+            }, 500);
         }
 
-        // Download as JPEG function (using html2canvas)
+        // Download as JPEG function
         function downloadAsJPEG() {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
@@ -1273,22 +1429,55 @@
                 return;
             }
             
-            // Prepare for screenshot
-            document.getElementById('printed-employee-name').style.display = 'block';
-            const elementsToHide = document.querySelectorAll('.no-print');
-            elementsToHide.forEach(el => el.style.visibility = 'hidden');
+            showLoading('Capturing screenshot...');
             
-            html2canvas(document.querySelector('.container')).then(canvas => {
-                // Restore visibility
-                elementsToHide.forEach(el => el.style.visibility = 'visible');
-                document.getElementById('printed-employee-name').style.display = 'none';
-                
-                const link = document.createElement('a');
-                link.download = `DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.9);
-                link.click();
-                displayMessage('JPEG downloaded successfully!', 'success');
+            // Store original display states
+            const noPrintElements = document.querySelectorAll('.no-print');
+            const originalStates = [];
+            noPrintElements.forEach(el => {
+                originalStates.push({
+                    element: el,
+                    display: el.style.display
+                });
+                el.style.display = 'none';
             });
+            
+            // Show employee name
+            updateEmployeeNameDisplay();
+            
+            // Capture after a short delay to ensure rendering
+            setTimeout(() => {
+                html2canvas(document.querySelector('.container'), {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                }).then(canvas => {
+                    // Restore original states
+                    originalStates.forEach(state => {
+                        state.element.style.display = state.display;
+                    });
+                    document.getElementById('printed-employee-name').style.display = 'none';
+                    
+                    const link = document.createElement('a');
+                    link.download = `DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.jpg`;
+                    link.href = canvas.toDataURL('image/jpeg', 0.9);
+                    link.click();
+                    
+                    displayMessage('✓ JPEG downloaded successfully!', 'success');
+                    hideLoading();
+                }).catch(error => {
+                    console.error('Canvas error:', error);
+                    displayMessage('❌ Error capturing image', 'error');
+                    hideLoading();
+                    
+                    // Restore states even on error
+                    originalStates.forEach(state => {
+                        state.element.style.display = state.display;
+                    });
+                    document.getElementById('printed-employee-name').style.display = 'none';
+                });
+            }, 500);
         }
 
         // Reset all remarks
