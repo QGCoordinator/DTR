@@ -226,40 +226,31 @@
             background-color: #16a085; 
         }
         
-        /* Table Styles */
+        /* Table Styles - PDF-like styling */
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 25px;
-            font-size: 14px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            overflow-x: auto;
-            display: block;
-        }
-        @media (min-width: 768px) {
-            table {
-                display: table;
-            }
+            font-size: 12px;
+            border: 1px solid #ddd;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
+            border: 1px solid #aaa;
+            padding: 8px;
             text-align: center;
             white-space: nowrap;
         }
         th {
             background-color: #3498db;
             color: white;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
-            position: sticky;
-            top: 0;
         }
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f2f2f2;
         }
         
-        /* Status Row Styling */
+        /* Status Row Styling - Lighter colors for print */
         .holiday-row { 
             background-color: #f3e5f5 !important; 
         }
@@ -288,44 +279,43 @@
             padding: 6px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 13px;
+            font-size: 12px;
         }
         .remarks-cell {
             min-width: 150px;
         }
         
-        /* Print-only elements */
-        .print-only {
-            display: none;
-        }
-        
-        /* Summary Section */
+        /* Summary Section - PDF-like */
         .summary {
             margin-top: 25px;
-            padding: 20px;
-            background-color: #ecf0f1;
-            border-radius: 8px;
-            font-size: 14px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px 40px;
-            justify-content: space-between;
+            padding: 15px;
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
         }
         .summary h3 { 
-            margin-top: 0; 
+            margin: 0 0 10px; 
             color: #2c3e50; 
-            font-size: 18px; 
-            width: 100%; 
+            font-size: 14px; 
+            grid-column: 1 / -1;
             border-bottom: 1px solid #bdc3c7; 
-            padding-bottom: 10px; 
+            padding-bottom: 8px; 
             font-weight: 600;
         }
         .summary p { 
             margin: 0; 
-            min-width: 200px;
         }
         .summary strong { 
             color: #3498db; 
+        }
+        
+        /* Print-only elements */
+        .print-only {
+            display: none;
         }
         
         /* Action Buttons - SMALLER SIZE */
@@ -365,15 +355,15 @@
             background-color: #7d3c98; 
         }
         
-        /* Employee Name Display */
+        /* Employee Name Display - Always show in exports */
         .employee-name-display {
             font-weight: bold;
-            font-size: 18px;
+            font-size: 16px;
             color: #2c3e50;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             display: none;
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             background-color: #f8f9fb;
             border-radius: 5px;
             border-left: 4px solid #3498db;
@@ -472,19 +462,50 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Print Styles - FIXED */
+        /* Special container for exports */
+        .export-container {
+            display: none;
+            padding: 20px;
+            background: white;
+        }
+        .export-container h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .export-table {
+            font-size: 11px;
+            border: 1px solid #000;
+        }
+        .export-table th {
+            background-color: #3498db !important;
+            color: white;
+            padding: 6px;
+            border: 1px solid #000;
+        }
+        .export-table td {
+            padding: 6px;
+            border: 1px solid #000;
+        }
+        .export-summary {
+            font-size: 11px;
+            margin-top: 15px;
+        }
+        
+        /* Print Styles - MATCHES PDF */
         @media print {
             body { 
                 padding: 0; 
-                font-size: 12px; 
-                background: white; 
                 margin: 0;
+                font-size: 11px; 
+                background: white; 
+                color: black;
             }
             .container { 
                 padding: 10px; 
                 box-shadow: none; 
                 max-width: 100%; 
                 margin: 0;
+                border: none;
             }
             .no-print { 
                 display: none !important; 
@@ -495,36 +516,48 @@
             .employee-name-display { 
                 display: block !important; 
                 margin: 0 0 10px; 
+                font-size: 14px;
+                background-color: #f8f9fb !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
             h1 { 
-                font-size: 22px; 
-                margin: 5px 0 15px; 
+                font-size: 18px; 
+                margin: 5px 0 10px; 
+                color: black;
+                border-bottom: 2px solid #000;
             }
             table { 
                 font-size: 11px;
-                display: table;
-                width: 100%;
-                overflow: visible !important;
+                border: 1px solid #000 !important;
+                margin-bottom: 15px;
             }
             th, td { 
-                padding: 8px; 
-                border-color: #aaa; 
+                padding: 6px; 
+                border: 1px solid #000 !important; 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color: black;
+            }
+            th {
+                background-color: #3498db !important;
+                color: white !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
             .summary { 
-                background-color: #ecf0f1 !important; 
+                background-color: #f2f2f2 !important; 
+                border: 1px solid #000 !important;
                 -webkit-print-color-adjust: exact; 
                 print-color-adjust: exact; 
+                font-size: 11px;
+                padding: 10px;
             }
             /* Force row colors for print */
             .holiday-row, .absent-row, .leave-row, .dayoff-row, 
             .wholeday-row, .halfday-row, .typhoon-row {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                background-color: inherit !important;
             }
             /* Hide input elements in print */
             .remarks-input {
@@ -533,9 +566,13 @@
             .print-only {
                 display: block !important;
             }
+            /* Remove rounded corners for print */
+            .container, .summary, table {
+                border-radius: 0;
+            }
         }
         
-        /* Responsive adjustments - IMPROVED */
+        /* Responsive adjustments */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -566,8 +603,8 @@
                 min-width: 100%;
                 padding: 12px;
             }
-            .summary p {
-                min-width: 100%;
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
             }
             table {
                 display: block;
@@ -585,6 +622,9 @@
             .action-buttons {
                 gap: 8px;
             }
+            .summary {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -598,6 +638,32 @@
         <div id="loading-text">Processing...</div>
     </div>
     
+    <!-- Hidden container for export/print consistency -->
+    <div id="export-template" class="export-container">
+        <h1>DAILY TIME RECORD (DTR) Tracker</h1>
+        <div id="export-employee-name" class="employee-name-display"></div>
+        <table id="export-table" class="export-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                    <th>Total Hours</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody id="export-table-body">
+                <!-- Will be populated by JavaScript -->
+            </tbody>
+        </table>
+        <div id="export-summary" class="export-summary">
+            <!-- Summary will be populated by JavaScript -->
+        </div>
+    </div>
+    
+    <!-- Main interface -->
     <div class="container">
         <h1>DAILY TIME RECORD (DTR) Tracker</h1>
         
@@ -712,7 +778,7 @@
     </div>
 
     <script>
-        // Initialize variables - completely clean
+        // Initialize variables
         let records = [];
         let employeeName = '';
 
@@ -728,15 +794,15 @@
         };
         
         // Operational hours
-        const WEEKDAY_TIME_IN = '09:00'; // 9:00 AM
-        const WEEKDAY_TIME_OUT = '18:00'; // 6:00 PM
-        const SATURDAY_TIME_OUT = '16:00'; // 4:00 PM
+        const WEEKDAY_TIME_IN = '09:00';
+        const WEEKDAY_TIME_OUT = '18:00';
+        const SATURDAY_TIME_OUT = '16:00';
         
-        // Fixed threshold to properly recognize Saturday as Whole Day
+        // Thresholds
         const MIN_WHOLE_DAY_HOURS_WEEKDAY = 5.8;
-        const MIN_WHOLE_DAY_HOURS_SATURDAY = 4.8; // Adjusted for Saturday shorter hours
+        const MIN_WHOLE_DAY_HOURS_SATURDAY = 4.8;
         
-        // --- Loading Overlay Functions ---
+        // --- Helper Functions ---
         function showLoading(text = 'Processing...') {
             const overlay = document.getElementById('loading-overlay');
             const loadingText = document.getElementById('loading-text');
@@ -749,7 +815,6 @@
             overlay.style.display = 'none';
         }
         
-        // --- Notification System ---
         function displayMessage(text, type = 'success', duration = 3000) {
             const area = document.getElementById('notification-area');
             const notification = document.createElement('div');
@@ -758,21 +823,18 @@
             
             area.appendChild(notification);
             
-            // Show the notification
             setTimeout(() => {
                 notification.classList.add('show');
             }, 10);
 
-            // Hide and remove the notification
             setTimeout(() => {
                 notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 500); // Wait for transition
+                setTimeout(() => notification.remove(), 500);
             }, duration);
         }
 
-        // Initialize the page
+        // --- Core Functions ---
         document.addEventListener('DOMContentLoaded', function() {
-            // Try to load existing data, but don't create sample data
             const storedRecords = localStorage.getItem('dtrRecords');
             const storedName = localStorage.getItem('employeeName');
             
@@ -790,7 +852,6 @@
                 document.getElementById('employee-name-input').value = employeeName;
             }
             
-            // Set today's date as default
             const today = new Date();
             const formattedDate = today.toISOString().split('T')[0];
             document.getElementById('date-input').value = formattedDate;
@@ -801,25 +862,22 @@
             updateTimeSuggestions();
         });
 
-        // Update time suggestions based on selected date
         function updateTimeSuggestions() {
             const dateInput = document.getElementById('date-input').value;
             if (!dateInput) return;
             
             const date = new Date(dateInput);
-            const dayOfWeek = date.getDay(); // 0 is Sunday, 6 is Saturday
+            const dayOfWeek = date.getDay();
             
-            // Set default time in to 9:00 AM
             document.getElementById('time-in-hours').value = 9;
             document.getElementById('time-in-minutes').value = 0;
             document.getElementById('time-in-ampm').value = 'AM';
             
-            // Set default time out based on day of week
-            if (dayOfWeek === 6) { // Saturday
+            if (dayOfWeek === 6) {
                 document.getElementById('time-out-hours').value = 4;
                 document.getElementById('time-out-minutes').value = 0;
                 document.getElementById('time-out-ampm').value = 'PM';
-            } else { // Weekdays (Monday to Friday)
+            } else {
                 document.getElementById('time-out-hours').value = 6;
                 document.getElementById('time-out-minutes').value = 0;
                 document.getElementById('time-out-ampm').value = 'PM';
@@ -837,7 +895,6 @@
             }
         }
 
-        // Helper function to validate and get 24-hour time
         function getTimeFromInput(hoursId, minutesId, ampmId) {
             const hoursStr = document.getElementById(hoursId).value;
             const minutesStr = document.getElementById(minutesId).value;
@@ -856,29 +913,23 @@
                 return null;
             }
             
-            // Convert to 24-hour format (HH:MM)
             let hour24 = hours;
             if (ampm === 'PM' && hour24 < 12) hour24 += 12;
-            if (ampm === 'AM' && hour24 === 12) hour24 = 0; // 12 AM is 00
+            if (ampm === 'AM' && hour24 === 12) hour24 = 0;
             
             return `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         }
 
-        // Function to format date - FIXED for cross-browser compatibility
         function formatDate(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
-            if (isNaN(date.getTime())) {
-                // Fallback for invalid dates
-                return dateString;
-            }
+            if (isNaN(date.getTime())) return dateString;
             const year = date.getFullYear();
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
             const day = date.getDate().toString().padStart(2, '0');
             return `${month}/${day}/${year}`;
         }
         
-        // Function to get Day of Week
         function getDayOfWeek(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString);
@@ -886,7 +937,6 @@
             return date.toLocaleDateString('en-US', { weekday: 'short' });
         }
 
-        // Function to format time as HH:MM AM/PM
         function formatTime(timeString) {
             if (!timeString || timeString === 'null') return '-';
             const [hours, minutes] = timeString.split(':').map(Number);
@@ -896,7 +946,6 @@
             return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         }
         
-        // Core calculation function
         function calculateHoursWithBreak(timeIn24, timeOut24) {
             if (!timeIn24 || !timeOut24 || timeIn24 === 'null' || timeOut24 === 'null') return 0;
             
@@ -907,19 +956,13 @@
             
             const timeIn = toMinutes(timeIn24);
             const timeOut = toMinutes(timeOut24);
-
-            // Handle overnight shifts
             let totalMinutes = (timeOut > timeIn ? timeOut - timeIn : (timeOut + 1440) - timeIn);
-            
-            // Subtract 60 minutes for break
-            totalMinutes -= 60; 
+            totalMinutes -= 60;
             
             if (totalMinutes < 0) return 0;
-            
             return totalMinutes / 60;
         }
 
-        // Function to calculate hours worked
         function calculateHours(record) {
             const status = record.status;
             if (status === STATUS_TYPES.HOLIDAY) return "Holiday";
@@ -931,19 +974,18 @@
             if (!record.timeIn && !record.timeOut) return 0;
 
             const date = new Date(record.date);
-            const dayOfWeek = date.getDay(); // 6 is Saturday
+            const dayOfWeek = date.getDay();
 
             let timeIn24 = record.timeIn;
             let timeOut24 = record.timeOut;
             let displayTimeOut = formatTime(timeOut24);
             
-            // Check if times are within operational hours
             let operationalNote = '';
-            if (dayOfWeek === 6) { // Saturday
+            if (dayOfWeek === 6) {
                 if (timeOut24 && timeOut24 > SATURDAY_TIME_OUT) {
                     operationalNote = ' (Beyond 4:00 PM)';
                 }
-            } else { // Weekday
+            } else {
                 if (timeIn24 && timeIn24 < WEEKDAY_TIME_IN) {
                     operationalNote = ' (Before 9:00 AM)';
                 }
@@ -962,7 +1004,6 @@
             };
         }
 
-        // Function to determine status
         function getStatus(record) {
             if (record.status === STATUS_TYPES.HOLIDAY) return 'Holiday';
             if (record.status === STATUS_TYPES.ABSENT) return 'Absent';
@@ -987,12 +1028,10 @@
             return '-';
         }
 
-        // Function to update the table
         function updateTable() {
             const tbody = document.getElementById('dtr-body');
             const emptyState = document.getElementById('empty-state');
             
-            // Show/hide empty state
             if (records.length === 0) {
                 emptyState.style.display = 'block';
                 tbody.innerHTML = '';
@@ -1000,7 +1039,6 @@
                 emptyState.style.display = 'none';
                 tbody.innerHTML = '';
                 
-                // Sort records by date (newest first)
                 records.sort((a, b) => new Date(b.date) - new Date(a.date));
                 
                 records.forEach(record => {
@@ -1019,9 +1057,7 @@
                         }
                     }
 
-                    // Auto-update status based on hours worked and apply row class
                     if (typeof hoursResult.hours === 'string' && hoursResult.hours !== '-') {
-                        // It's a calculation result, not a fixed status string
                         const hoursWorked = parseFloat(hoursResult.hours);
                         const date = new Date(record.date);
                         const dayOfWeek = date.getDay();
@@ -1032,9 +1068,8 @@
                         } else if (hoursWorked > 0) {
                             record.status = STATUS_TYPES.HALFDAY;
                         }
-                        currentStatus = getStatus(record); // Recalculate based on new status
+                        currentStatus = getStatus(record);
                     } else if (record.timeIn && record.timeOut && !record.status) {
-                        // Check for Half Day/Whole Day if no status was explicitly set
                         const hoursWorked = calculateHoursWithBreak(record.timeIn, record.timeOut);
                         const date = new Date(record.date);
                         const dayOfWeek = date.getDay();
@@ -1045,8 +1080,7 @@
                         currentStatus = getStatus(record);
                     }
 
-                    // Apply appropriate class based on final status
-                    row.className = ''; // Reset class list
+                    row.className = '';
                     if (record.status === STATUS_TYPES.HOLIDAY) row.classList.add('holiday-row');
                     else if (record.status === STATUS_TYPES.ABSENT) row.classList.add('absent-row');
                     else if (record.status === STATUS_TYPES.LEAVE) row.classList.add('leave-row');
@@ -1078,7 +1112,6 @@
             localStorage.setItem('dtrRecords', JSON.stringify(records));
         }
 
-        // Function to update remarks
         function updateRemarks(date, remarks) {
             const record = records.find(r => r.date === date);
             if (record) {
@@ -1088,17 +1121,14 @@
             }
         }
 
-        // Function to update summary
         function updateSummary() {
             const dayCounter = records.length;
             
-            // Count records by status (use the stored status)
             const holidayCounter = records.filter(r => r.status === STATUS_TYPES.HOLIDAY).length;
             const leaveCounter = records.filter(r => r.status === STATUS_TYPES.LEAVE).length;
             const dayoffCounter = records.filter(r => r.status === STATUS_TYPES.DAYOFF).length;
             const typhoonCounter = records.filter(r => r.status === STATUS_TYPES.TYPHOON).length;
             
-            // Count Whole Day/Half Day/Absent based on the status determined during updateTable
             let totalHours = 0;
             let wholedayCounter = 0;
             let halfdayCounter = 0;
@@ -1123,7 +1153,6 @@
                 } else if (record.status === STATUS_TYPES.ABSENT || (!record.timeIn && !record.timeOut && !record.status)) {
                     absentCounter++;
                 } else if (record.timeIn && record.timeOut && !record.status) {
-                    // For records with time but no explicit status, calculate and determine status
                     const result = calculateHours(record);
                     if (typeof result === 'object' && result.hours !== '-') {
                         const hours = parseFloat(result.hours);
@@ -1131,7 +1160,7 @@
                             totalHours += hours;
                             totalWorkingDays++;
                         } else {
-                            absentCounter++; // Less than 1 hour worked
+                            absentCounter++;
                         }
                     } else if (!record.timeIn && !record.timeOut) {
                         absentCounter++;
@@ -1153,7 +1182,6 @@
             document.getElementById('total-typhoon').textContent = typhoonCounter;
         }
 
-        // Save employee info
         function saveEmployeeInfo() {
             employeeName = document.getElementById('employee-name-input').value.trim();
             if (employeeName === '') {
@@ -1165,7 +1193,6 @@
             displayMessage('✓ Employee name saved!', 'success');
         }
 
-        // Mark status (holiday, absent, leave, day off, typhoon)
         function markStatus(status) {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
@@ -1184,7 +1211,6 @@
                 record = { date: dateInput, timeIn: null, timeOut: null, status: status, employeeName: employeeName, remarks: '' };
                 records.push(record);
             } else {
-                // If a record exists, clear time and set status
                 record.status = status;
                 record.timeIn = null;
                 record.timeOut = null;
@@ -1196,7 +1222,6 @@
             displayMessage(`✓ Status marked as ${status.toUpperCase()} for ${formatDate(dateInput)}.`, 'success');
         }
 
-        // Record Time In
         function recordTimeIn() {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
@@ -1210,7 +1235,7 @@
             }
             
             const timeIn = getTimeFromInput('time-in-hours', 'time-in-minutes', 'time-in-ampm');
-            if (!timeIn) return; // Error handled inside getTimeFromInput
+            if (!timeIn) return;
             
             let record = records.find(r => r.date === dateInput);
             
@@ -1230,7 +1255,6 @@
             displayMessage(`✓ Time In recorded at ${formatTime(timeIn)} for ${formatDate(dateInput)}.`, 'success');
         }
 
-        // Record Time Out
         function recordTimeOut() {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
@@ -1244,7 +1268,7 @@
             }
             
             const timeOut = getTimeFromInput('time-out-hours', 'time-out-minutes', 'time-out-ampm');
-            if (!timeOut) return; // Error handled inside getTimeFromInput
+            if (!timeOut) return;
             
             let record = records.find(r => r.date === dateInput);
 
@@ -1258,7 +1282,6 @@
                 record = { date: dateInput, timeIn: null, timeOut: timeOut, status: null, employeeName: employeeName, remarks: '' };
                 records.push(record);
             } else {
-                // --- Time Order Check ---
                 if (record.timeIn && timeOut <= record.timeIn) {
                     displayMessage('🛑 Time Out must be AFTER Time In.', 'error');
                     return;
@@ -1272,7 +1295,6 @@
             displayMessage(`✓ Time Out recorded at ${formatTime(timeOut)} for ${formatDate(dateInput)}.`, 'success');
         }
 
-        // Clear data for selected date
         function clearDateData() {
             const dateInput = document.getElementById('date-input').value;
             if (!dateInput) {
@@ -1296,7 +1318,72 @@
             }
         }
 
-        // Print function - FIXED
+        // --- NEW: Prepare Export Template (for consistent output) ---
+        function prepareExportTemplate() {
+            if (!employeeName || records.length === 0) return null;
+            
+            const exportContainer = document.getElementById('export-template');
+            const exportEmployeeName = document.getElementById('export-employee-name');
+            const exportTableBody = document.getElementById('export-table-body');
+            const exportSummary = document.getElementById('export-summary');
+            
+            // Set employee name
+            exportEmployeeName.textContent = `Employee: ${employeeName}`;
+            exportEmployeeName.style.display = 'block';
+            
+            // Clear and populate table
+            exportTableBody.innerHTML = '';
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            records.forEach(record => {
+                const dayOfWeek = getDayOfWeek(record.date);
+                let hoursResult = calculateHours(record);
+                let hours = typeof hoursResult === 'object' ? hoursResult.hours : hoursResult;
+                let timeOutDisplay = typeof hoursResult === 'object' ? hoursResult.timeOutDisplay : formatTime(record.timeOut);
+                let status = getStatus(record);
+                
+                const row = document.createElement('tr');
+                
+                // Apply status classes
+                if (record.status === STATUS_TYPES.HOLIDAY) row.classList.add('holiday-row');
+                else if (record.status === STATUS_TYPES.ABSENT) row.classList.add('absent-row');
+                else if (record.status === STATUS_TYPES.LEAVE) row.classList.add('leave-row');
+                else if (record.status === STATUS_TYPES.DAYOFF) row.classList.add('dayoff-row');
+                else if (record.status === STATUS_TYPES.WHOLEDAY) row.classList.add('wholeday-row');
+                else if (record.status === STATUS_TYPES.HALFDAY) row.classList.add('halfday-row');
+                else if (record.status === STATUS_TYPES.TYPHOON) row.classList.add('typhoon-row');
+                
+                row.innerHTML = `
+                    <td>${formatDate(record.date)}</td>
+                    <td>${dayOfWeek}</td>
+                    <td>${formatTime(record.timeIn)}</td>
+                    <td>${timeOutDisplay}</td>
+                    <td>${hours}</td>
+                    <td>${status}</td>
+                    <td>${record.remarks || '-'}</td>
+                `;
+                exportTableBody.appendChild(row);
+            });
+            
+            // Create summary
+            exportSummary.innerHTML = `
+                <h3>Summary of the Period</h3>
+                <p><strong>Total Days Recorded:</strong> ${document.getElementById('total-days').textContent}</p>
+                <p><strong>Total Hours Worked:</strong> ${document.getElementById('total-hours').textContent} hours</p>
+                <p><strong>Average Hours per Working Day:</strong> ${document.getElementById('avg-hours').textContent} hours</p>
+                <p><strong>Whole Days:</strong> ${document.getElementById('total-wholeday').textContent}</p>
+                <p><strong>Half Days:</strong> ${document.getElementById('total-halfday').textContent}</p>
+                <p><strong>Holidays:</strong> ${document.getElementById('total-holidays').textContent}</p>
+                <p><strong>Leave Days:</strong> ${document.getElementById('total-leave').textContent}</p>
+                <p><strong>Absent Days:</strong> ${document.getElementById('total-absent').textContent}</p>
+                <p><strong>Days Off:</strong> ${document.getElementById('total-dayoff').textContent}</p>
+                <p><strong>No Work (Typhoon):</strong> ${document.getElementById('total-typhoon').textContent}</p>
+            `;
+            
+            return exportContainer;
+        }
+
+        // --- Print Function (uses export template) ---
         function printDTR() {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
@@ -1308,21 +1395,125 @@
                 return;
             }
             
-            // Show employee name for print
-            updateEmployeeNameDisplay();
+            showLoading('Preparing print...');
             
-            // Trigger print
             setTimeout(() => {
-                window.print();
-            }, 100);
-            
-            // Hide employee name after print (with delay for print dialog)
-            setTimeout(() => {
-                document.getElementById('printed-employee-name').style.display = 'none';
-            }, 1000);
+                try {
+                    // Prepare export template
+                    const exportContainer = prepareExportTemplate();
+                    if (!exportContainer) {
+                        hideLoading();
+                        return;
+                    }
+                    
+                    // Show the export container
+                    exportContainer.style.display = 'block';
+                    
+                    // Get the HTML content
+                    const printContent = exportContainer.innerHTML;
+                    
+                    // Create a new window for printing
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>DTR - ${employeeName}</title>
+                            <style>
+                                body { 
+                                    font-family: Arial, sans-serif; 
+                                    font-size: 11px; 
+                                    margin: 0; 
+                                    padding: 15px; 
+                                    color: black;
+                                }
+                                h1 { 
+                                    font-size: 18px; 
+                                    text-align: center; 
+                                    margin: 0 0 10px; 
+                                    border-bottom: 2px solid #000;
+                                    padding-bottom: 5px;
+                                }
+                                .employee-name-display {
+                                    font-weight: bold;
+                                    font-size: 14px;
+                                    margin: 0 0 10px;
+                                    padding: 5px;
+                                    background-color: #f8f9fb;
+                                    border-left: 4px solid #3498db;
+                                }
+                                table {
+                                    width: 100%;
+                                    border-collapse: collapse;
+                                    font-size: 11px;
+                                    border: 1px solid #000;
+                                    margin-bottom: 15px;
+                                }
+                                th, td {
+                                    border: 1px solid #000;
+                                    padding: 6px;
+                                    text-align: center;
+                                }
+                                th {
+                                    background-color: #3498db !important;
+                                    color: white !important;
+                                }
+                                .summary {
+                                    font-size: 11px;
+                                    background-color: #f2f2f2;
+                                    border: 1px solid #000;
+                                    padding: 10px;
+                                    margin-top: 10px;
+                                }
+                                .summary h3 {
+                                    margin: 0 0 10px;
+                                    font-size: 14px;
+                                    border-bottom: 1px solid #000;
+                                    padding-bottom: 5px;
+                                }
+                                .summary p {
+                                    margin: 2px 0;
+                                }
+                                .holiday-row { background-color: #f3e5f5 !important; }
+                                .absent-row { background-color: #faebd7 !important; }
+                                .leave-row { background-color: #fffff0 !important; }
+                                .dayoff-row { background-color: #e6eef5 !important; }
+                                .wholeday-row { background-color: #e9f5e9 !important; }
+                                .halfday-row { background-color: #fff8e1 !important; }
+                                .typhoon-row { background-color: #d1ecf1 !important; }
+                                @media print {
+                                    @page { margin: 0.5cm; }
+                                    body { margin: 0; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            ${printContent}
+                            <script>
+                                window.onload = function() {
+                                    window.print();
+                                    setTimeout(() => window.close(), 100);
+                                };
+                            <\/script>
+                        </body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                    
+                    // Hide export container
+                    exportContainer.style.display = 'none';
+                    
+                    displayMessage('✓ Print dialog opened!', 'success');
+                    hideLoading();
+                } catch (error) {
+                    console.error('Print error:', error);
+                    displayMessage('❌ Error preparing print', 'error');
+                    hideLoading();
+                }
+            }, 500);
         }
 
-        // Export to PDF function
+        // --- Export to PDF (unchanged, matches template) ---
         function saveAsPDF() {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
@@ -1339,9 +1530,8 @@
             setTimeout(() => {
                 try {
                     const { jsPDF } = window.jspdf;
-                    const pdf = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape
+                    const pdf = new jsPDF('l', 'mm', 'a4');
                     
-                    // Set up document properties
                     pdf.setFontSize(16);
                     pdf.text('DAILY TIME RECORD (DTR) Tracker', 148.5, 10, null, null, 'center');
                     
@@ -1349,7 +1539,6 @@
                     pdf.text(`Employee: ${employeeName}`, 10, 18);
                     pdf.text(`Date Exported: ${new Date().toLocaleDateString()}`, 287, 18, null, null, 'right');
 
-                    // Prepare table data
                     const head = [['Date', 'Day', 'Time In', 'Time Out', 'Total Hours', 'Status', 'Remarks']];
                     const body = records.map(record => {
                         const hoursResult = calculateHours(record);
@@ -1367,7 +1556,6 @@
                         ];
                     });
 
-                    // Use autoTable plugin
                     pdf.autoTable({
                         startY: 25,
                         head: head,
@@ -1377,13 +1565,12 @@
                         alternateRowStyles: { fillColor: [242, 242, 242] },
                         styles: { fontSize: 10, cellPadding: 2, overflow: 'linebreak' },
                         columnStyles: {
-                            4: { cellWidth: 20 }, // Total Hours width
-                            5: { cellWidth: 20 }, // Status width
-                            6: { cellWidth: 40 }  // Remarks width
+                            4: { cellWidth: 20 },
+                            5: { cellWidth: 20 },
+                            6: { cellWidth: 40 }
                         }
                     });
 
-                    // Add Summary below the table
                     let finalY = pdf.autoTable.previous.finalY + 5;
                     const summaryData = [
                         ['Total Days Recorded:', document.getElementById('total-days').textContent],
@@ -1408,16 +1595,16 @@
                     
                     pdf.save(`DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`);
                     displayMessage('✓ PDF exported successfully!', 'success');
+                    hideLoading();
                 } catch (error) {
                     console.error('PDF export error:', error);
                     displayMessage('❌ Error exporting PDF', 'error');
-                } finally {
                     hideLoading();
                 }
             }, 500);
         }
 
-        // Download as JPEG function
+        // --- Download as JPEG (uses same template as PDF) ---
         function downloadAsJPEG() {
             if (!employeeName) {
                 displayMessage('🛑 Please enter and save your name first.', 'error');
@@ -1429,58 +1616,54 @@
                 return;
             }
             
-            showLoading('Capturing screenshot...');
+            showLoading('Generating JPEG...');
             
-            // Store original display states
-            const noPrintElements = document.querySelectorAll('.no-print');
-            const originalStates = [];
-            noPrintElements.forEach(el => {
-                originalStates.push({
-                    element: el,
-                    display: el.style.display
-                });
-                el.style.display = 'none';
-            });
-            
-            // Show employee name
-            updateEmployeeNameDisplay();
-            
-            // Capture after a short delay to ensure rendering
             setTimeout(() => {
-                html2canvas(document.querySelector('.container'), {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff'
-                }).then(canvas => {
-                    // Restore original states
-                    originalStates.forEach(state => {
-                        state.element.style.display = state.display;
+                try {
+                    // Prepare export template
+                    const exportContainer = prepareExportTemplate();
+                    if (!exportContainer) {
+                        hideLoading();
+                        return;
+                    }
+                    
+                    // Show the export container
+                    exportContainer.style.display = 'block';
+                    
+                    // Capture the export container
+                    html2canvas(exportContainer, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff',
+                        width: exportContainer.offsetWidth,
+                        height: exportContainer.offsetHeight
+                    }).then(canvas => {
+                        // Hide export container
+                        exportContainer.style.display = 'none';
+                        
+                        const link = document.createElement('a');
+                        link.download = `DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.jpg`;
+                        link.href = canvas.toDataURL('image/jpeg', 1.0);
+                        link.click();
+                        
+                        displayMessage('✓ JPEG downloaded successfully!', 'success');
+                        hideLoading();
+                    }).catch(error => {
+                        console.error('Canvas error:', error);
+                        displayMessage('❌ Error capturing image', 'error');
+                        exportContainer.style.display = 'none';
+                        hideLoading();
                     });
-                    document.getElementById('printed-employee-name').style.display = 'none';
-                    
-                    const link = document.createElement('a');
-                    link.download = `DTR_${employeeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.jpg`;
-                    link.href = canvas.toDataURL('image/jpeg', 0.9);
-                    link.click();
-                    
-                    displayMessage('✓ JPEG downloaded successfully!', 'success');
+                } catch (error) {
+                    console.error('JPEG export error:', error);
+                    displayMessage('❌ Error exporting JPEG', 'error');
                     hideLoading();
-                }).catch(error => {
-                    console.error('Canvas error:', error);
-                    displayMessage('❌ Error capturing image', 'error');
-                    hideLoading();
-                    
-                    // Restore states even on error
-                    originalStates.forEach(state => {
-                        state.element.style.display = state.display;
-                    });
-                    document.getElementById('printed-employee-name').style.display = 'none';
-                });
+                }
             }, 500);
         }
 
-        // Reset all remarks
+        // --- Other Functions ---
         function resetRemarks() {
             if (records.length === 0) {
                 displayMessage('No records to reset remarks for.', 'warning');
@@ -1497,7 +1680,6 @@
             }
         }
 
-        // Reset all status
         function resetAllStatus() {
             if (records.length === 0) {
                 displayMessage('No records to reset status for.', 'warning');
@@ -1506,7 +1688,6 @@
             
             if (confirm('⚠️ Are you sure you want to reset ALL statuses? This will clear all status markers and recalculate based on time entries.')) {
                 records.forEach(record => {
-                    // Reset status to null, allowing automatic recalculation based on time entries
                     record.status = null;
                 });
                 localStorage.setItem('dtrRecords', JSON.stringify(records));
@@ -1516,7 +1697,6 @@
             }
         }
 
-        // Clear all records
         function clearRecords() {
             if (records.length === 0) {
                 displayMessage('No records to clear.', 'warning');
